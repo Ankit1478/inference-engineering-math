@@ -4,9 +4,9 @@ The math I need for LLM inference engineering, and nothing more. I'm learning on
 
 Each lesson has the same parts: why it matters for inference, a real-life example, a small worked example, the inference connection, key takeaways and a quick check with answers.
 
-✅ = done, ⬜ = to do, ⭐ = very important
+✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 13 done, 24 left, 37 total**
+**Progress: 12 done, 1 in progress, 24 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -20,12 +20,12 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [Rank and low-rank (LoRA), already known](01-linear-algebra/08-rank-and-low-rank-lora.md)
 - ✅ [SVD (idea only)](01-linear-algebra/09-svd.md)
 
-## Section 2: Numbers inside computers (4/7)
+## Section 2: Numbers inside computers (3/7)
 
 - ✅ [Bits and bytes](02-numbers-inside-computers/01-bits-and-bytes.md)
 - ✅ [Binary integers (INT8, INT4)](02-numbers-inside-computers/02-binary-integers.md)
 - ✅ [Floating point: FP32, FP16, BF16](02-numbers-inside-computers/03-floating-point-fp32-fp16-bf16.md) ⭐
-- ✅ [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐
+- 🟡 [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐ (basics done; next: accuracy loss, INT4, the "one huge number" problem, groups)
 - ⬜ Rounding errors and overflow
 - ⬜ FP8 ⭐
 - ⬜ What gets quantized: weights, activations, KV cache ⭐
@@ -83,7 +83,7 @@ Dequantize:          back = stored × scale
 ## After the math
 
 1. How a GPU works (HBM, SMs, Tensor Cores, NVLink)
-2. Inference techniques (PagedAttention, continuous batching, speculative decoding, FlashAttention, quantization methods, parallelism)
+2. Inference techniques (PagedAttention, continuous batching, speculative decoding, FlashAttention, quantization methods like GPTQ, AWQ and SmoothQuant, parallelism)
 3. Serving frameworks (vLLM, SGLang, TensorRT-LLM)
 4. Measuring and profiling (TTFT, TPOT, throughput, Nsight)
 5. Projects
