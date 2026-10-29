@@ -1,6 +1,8 @@
 # Inference Engineering Math
 
-The math I need for LLM inference engineering, and nothing more. I'm learning one topic at a time and ticking it off here.
+The math I need for LLM inference engineering, and nothing more. I'm learning one topic at a time. When I finish a topic, its lesson is added here and linked below.
+
+Each lesson has the same parts: why it matters for inference, a real-life example, a small worked example, the inference connection, key takeaways and a quick check with answers.
 
 ✅ = done, ⬜ = to do, ⭐ = very important
 
@@ -8,22 +10,22 @@ The math I need for LLM inference engineering, and nothing more. I'm learning on
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
-- ✅ Vectors and dot product ⭐
-- ✅ Matrices and matrix multiplication ⭐
-- ✅ Matrix shapes and counting FLOPs ⭐
-- ✅ Linear transformations (+ ReLU filter)
-- ✅ Transpose and identity matrix
-- ✅ Tensors: `[batch, tokens, hidden]` ⭐
-- ✅ Splitting matrices across GPUs + Megatron trick ⭐
-- ✅ Rank and low-rank (LoRA), already known
-- ✅ SVD (idea only)
+- ✅ [Vectors and dot product](01-linear-algebra/01-vectors-and-dot-product.md) ⭐
+- ✅ [Matrices and matrix multiplication](01-linear-algebra/02-matrices-and-matrix-multiplication.md) ⭐
+- ✅ [Matrix shapes and counting FLOPs](01-linear-algebra/03-matrix-shapes-and-counting-flops.md) ⭐
+- ✅ [Linear transformations (+ ReLU filter)](01-linear-algebra/04-linear-transformations.md)
+- ✅ [Transpose and identity matrix](01-linear-algebra/05-transpose-and-identity.md)
+- ✅ [Tensors: `[batch, tokens, hidden]`](01-linear-algebra/06-tensors.md) ⭐
+- ✅ [Splitting matrices across GPUs + Megatron trick](01-linear-algebra/07-splitting-matrices-across-gpus.md) ⭐
+- ✅ [Rank and low-rank (LoRA), already known](01-linear-algebra/08-rank-and-low-rank-lora.md)
+- ✅ [SVD (idea only)](01-linear-algebra/09-svd.md)
 
 ## Section 2: Numbers inside computers (4/7)
 
-- ✅ Bits and bytes
-- ✅ Binary integers (INT8, INT4)
-- ✅ Floating point: FP32, FP16, BF16 ⭐
-- ✅ Quantization basics: scale, round, dequantize ⭐
+- ✅ [Bits and bytes](02-numbers-inside-computers/01-bits-and-bytes.md)
+- ✅ [Binary integers (INT8, INT4)](02-numbers-inside-computers/02-binary-integers.md)
+- ✅ [Floating point: FP32, FP16, BF16](02-numbers-inside-computers/03-floating-point-fp32-fp16-bf16.md) ⭐
+- ✅ [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐
 - ⬜ Rounding errors and overflow
 - ⬜ FP8 ⭐
 - ⬜ What gets quantized: weights, activations, KV cache ⭐
