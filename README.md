@@ -75,8 +75,9 @@ FLOPs (matmul):      2 × m × n × k
 FLOPs per token:     ≈ 2 × parameters
 Model size (bytes):  parameters × bytes per number
 Read time:           model size ÷ memory bandwidth
-Quantize:            stored = round(weight ÷ scale)
-Dequantize:          weight ≈ stored × scale
+Scale:               scale = biggest number ÷ biggest whole number allowed
+Quantize:            stored = round(number ÷ scale)
+Dequantize:          back = stored × scale
 ```
 
 ## After the math

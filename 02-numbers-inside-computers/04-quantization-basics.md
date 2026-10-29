@@ -1,167 +1,159 @@
 # 2.4 Quantization Basics: Scale, Round, Dequantize
 
-**Quantization stores decimal weights as small integers by dividing them by a scale and rounding, then multiplies them back by the scale when they are used.**
+**Quantization means storing the model's decimal numbers as small whole numbers, so the model gets smaller and faster.**
 
 ## Why this matters for inference
 
-- Quantization is one of the most powerful tools an inference engineer has.
-- It makes the model **smaller**, so it fits on fewer GPUs.
-- It makes decode **faster**, because there are fewer bytes to read per token.
-- It makes serving **cheaper**.
-- The cost is a small loss in accuracy, which you must measure.
+- A model is just a long list of numbers, like `0.8, -1.5, 2.0, 0.3, ...`
+- These numbers are called **weights**. The model learned them during training.
+- A big model has billions of them, and each one takes 2 bytes, so the model is very heavy.
+- Quantization makes each number smaller. The model then fits on fewer GPUs and writes words faster.
+
+### Why are some numbers negative?
+
+Each weight says how much something matters:
+
+- **Positive (+)**: "yes, more of this"
+- **Negative (−)**: "no, less of this"
+- **Near zero**: "doesn't matter much"
+
+Without negative numbers, the model could never say "no".
+
+### Why store whole numbers?
+
+The GPU **can** store decimals. We **choose** whole numbers because they are smaller:
+
+| Type | Example | Space for one number |
+|---|---|---|
+| Decimal | 0.8 | 2 bytes |
+| Small whole number | 5 | 1 byte, or even half a byte |
+
+To write each word, the GPU reads all the numbers in the model. Less to read means faster words.
 
 ## Real-life example
 
-Shop prices: ₹49.80, ₹102.30, ₹7.60
+### Should I watch this movie?
 
-| How much you round | Prices | Detail |
+| Fact | Weight | Why |
 |---|---|---|
-| To the nearest ₹1 | 50, 102, 8 | Quite good |
-| To the nearest ₹10 | 50, 100, 10 | Rough |
+| Has action | +0.8 | I like it |
+| Is 3 hours long | −1.5 | I don't like it |
+| Has my favourite actor | +2.0 | I love it |
 
-Rounding saves effort but loses a bit of detail. The coarser you round, the more you lose.
+Total: 0.8 − 1.5 + 2.0 = **1.3**, which is positive, so watch it.
 
-Quantization is the same: round decimal weights to a small set of integer values.
+This is exactly what a model does with its weights: positives push the answer up, negatives push it down.
+
+### The suitcase
+
+You *can* pack big clothes, but if you fold them small, more fits and the suitcase is lighter to carry. Quantization is folding the numbers small.
 
 ## The math
 
-### The two formulas
+To keep the maths easy, pretend the box only holds whole numbers from **-10 to 10**. (In real life the box is -127 to 127. It has room for negatives because weights can be negative.)
+
+Numbers: `0.4, -1.0, 2.0`
+
+### Step 1: Scale (work out the size of one step)
+
+Find the biggest number, ignoring the minus sign. Here that is **2.0**.
+
+We want 2.0 to land on the edge of the box, which is 10:
 
 ```
-Quantize (store):     q = round(w ÷ scale)
-Dequantize (use):     w ≈ q × scale
+scale = 2.0 ÷ 10 = 0.2
 ```
 
-### How to choose the scale
+So each whole number is worth 0.2, like a ruler with a mark every 0.2.
+
+### Step 2: Round (turn each number into a whole number and store it)
+
+| Number | ÷ 0.2 | Stored |
+|---|---|---|
+| 0.4 | 2 | **2** |
+| -1.0 | -5 | **-5** |
+| 2.0 | 10 | **10** |
+
+We store `2, -5, 10`, plus the scale `0.2` once.
+
+### Step 3: Dequantize (turn it back when the model reads it)
 
 ```
-scale = (largest absolute weight) ÷ (largest integer allowed)
+2 × 0.2  = 0.4   ✓
+-5 × 0.2 = -1.0  ✓
+10 × 0.2 = 2.0   ✓
 ```
 
-- INT8 (symmetric): largest integer = 127
-- INT4 (symmetric): largest integer = 7
+- Rounding happens **once**, when the model is saved.
+- Turning it back happens **every time** the model runs.
 
-### Worked example: INT8
+### The scale is calculated, not picked freely
 
-Weights (BF16):
-
-```
-[0.50, -1.27, 0.034, 0.886]
-```
-
-**Step A: find the scale**
+If you just pick a scale, numbers can overflow. For example, multiplying everything by 100:
 
 ```
-Largest absolute weight = 1.27
-scale = 1.27 ÷ 127 = 0.01
+3.0, -1.5, 0.7  ×100  →  300, -150, 70
 ```
 
-**Step B: divide and round**
+300 doesn't fit in a box that goes up to 10. It's broken.
+
+So always calculate the scale from the biggest number, so that the biggest number lands exactly on the edge of the box.
+
+Multiplying and dividing are the same idea: dividing by 0.2 is the same as multiplying by 5.
+
+### We lose a little accuracy
+
+Take 0.5 with a scale of 0.2:
 
 ```
- 0.50  ÷ 0.01 =   50    →   50
--1.27  ÷ 0.01 = -127    → -127
- 0.034 ÷ 0.01 =    3.4  →    3
- 0.886 ÷ 0.01 =   88.6  →   89
+0.5 ÷ 0.2 = 2.5  →  round  →  3
+3 × 0.2   = 0.6
 ```
 
-Store `[50, -127, 3, 89]` (1 byte each) plus the scale `0.01` once.
-
-**Step C: dequantize when needed**
-
-```
-  50 × 0.01 =  0.50   (true 0.50)   error 0
--127 × 0.01 = -1.27   (true -1.27)  error 0
-   3 × 0.01 =  0.03   (true 0.034)  error 0.004
-  89 × 0.01 =  0.89   (true 0.886)  error 0.004
-```
-
-Very small errors.
-
-### Worked example: INT4
-
-Same weights, but now only -7 to 7 is allowed.
-
-```
-scale = 1.27 ÷ 7 ≈ 0.181
-
- 0.50  ÷ 0.181 ≈  2.76 →  3 →  3 × 0.181 ≈  0.544   (true 0.50)   error 0.044
--1.27  ÷ 0.181 ≈ -7.00 → -7 → -7 × 0.181 ≈ -1.27    (true -1.27)  error 0
- 0.034 ÷ 0.181 ≈  0.19 →  0 →  0 × 0.181 =  0.00    (true 0.034)  error 0.034
- 0.886 ÷ 0.181 ≈  4.88 →  5 →  5 × 0.181 ≈  0.907   (true 0.886)  error 0.021
-```
-
-Bigger errors, but half the size of INT8. Note that the small weight 0.034 became **0**.
-
-### The outlier problem
-
-What if one weight is much bigger than the rest?
-
-```
-Weights: [0.02, -0.05, 0.03, 50.0]
-scale = 50.0 ÷ 127 ≈ 0.394
-
-0.02  ÷ 0.394 ≈ 0.05 → 0
--0.05 ÷ 0.394 ≈ -0.13 → 0
-0.03  ÷ 0.394 ≈ 0.08 → 0
-50.0  ÷ 0.394 = 127  → 127
-```
-
-One big weight ("outlier") made the scale huge, and all the small weights became **0**. Their information is lost.
-
-### The fix: group-wise scales
-
-Split the weights into **small groups** (for example 128 weights each) and give **each group its own scale**.
-
-- An outlier only spoils the scale of its own group.
-- Other groups keep a small scale and good detail.
-- Storing extra scales costs a little memory, but it is worth it.
-
-This is how most INT4 methods keep good quality.
+We put in **0.5** and got back **0.6**. That small difference is the price we pay for saving memory.
 
 ## Inference connection
 
-### 70B model sizes and read time
+A 70B model has about 70 billion numbers:
 
-> Note: simplified round numbers are used here: memory bandwidth ≈ 2,000 GB/s, H100 memory = 80 GB. A real H100 SXM is about 3.35 TB/s.
+| Stored as | Size | GPUs needed (80 GB each) |
+|---|---|---|
+| Decimals (2 bytes) | 140 GB | 2 |
+| Whole numbers (1 byte) | 70 GB | 1 (tight) |
+| Small whole numbers (half a byte) | 35 GB | 1, with room to spare |
 
-| Format | Size | Fits on one 80 GB GPU? | Read time per token |
-|---|---|---|---|
-| BF16 | 140 GB | ❌ No (needs 2+) | 70 ms |
-| INT8 | 70 GB | ✅ Yes (tight) | 35 ms |
-| INT4 | 35 GB | ✅ Yes, with room for the KV cache | 17.5 ms |
-
-### Quality trade-off
-
-| Format | Bytes per weight | Error | Typical quality |
-|---|---|---|---|
-| BF16 | 2 | none | Original |
-| INT8 | 1 | very small | Almost the same |
-| INT4 | 0.5 | larger | A little lower, often fine |
-
-Always **measure** quality after quantizing (for example with perplexity, covered in Section 4).
+Smaller model, so less to read per word, so faster words and cheaper serving.
 
 ## Remember
 
-- Quantize: `q = round(w ÷ scale)`. Dequantize: `w ≈ q × scale`.
-- `scale = max |w| ÷ max integer` (127 for INT8, 7 for INT4).
-- INT8 errors are tiny. INT4 errors are larger, but the model is half the size.
-- Outliers ruin the scale. Group-wise scales fix this.
-- Quantization = smaller + faster + cheaper, with a small quality cost.
+- A model is a list of numbers (weights). Some are positive, some negative.
+- We store them as small whole numbers to save memory and go faster.
+- `scale = biggest number ÷ biggest whole number allowed`
+- `store = round(number ÷ scale)`
+- `back = stored × scale`
+- The scale is calculated from the biggest number, so nothing overflows.
+- We lose a little accuracy (0.5 came back as 0.6).
+
+## Still to learn
+
+- [ ] Why some accuracy gets lost
+- [ ] Using fewer bits (INT4)
+- [ ] The "one huge number" problem
+- [ ] The fix: splitting numbers into small groups
 
 ## Quick check
 
-1. Weights `[0.2, -0.4, 0.1]`. What is the INT8 scale?
-2. Using that scale, what are the stored integers?
-3. Why does one large weight hurt quantization?
-4. A 13B model in INT4. How big is it?
+The box holds -10 to 10. Numbers: `4.0, -2.0, 1.0`
+
+1. What is the scale?
+2. What whole numbers get stored?
+3. Why would multiplying by 100 be a bad choice?
 
 <details>
 <summary>Answers</summary>
 
-1. scale = 0.4 ÷ 127 ≈ **0.00315**
-2. 0.2 ÷ 0.00315 ≈ 63.5 → **64** (63 is also acceptable), -0.4 → **-127**, 0.1 ÷ 0.00315 ≈ 31.75 → **32**
-3. It makes the scale large, so the small weights round to 0 and lose their information.
-4. 13 × 0.5 = **6.5 GB**
+1. scale = 4.0 ÷ 10 = **0.4**
+2. 4.0 ÷ 0.4 = **10**, -2.0 ÷ 0.4 = **-5**, 1.0 ÷ 0.4 = 2.5 → **3** (2 is also acceptable)
+3. 4.0 × 100 = 400, which is far past the box edge of 10, so it overflows.
 
 </details>
