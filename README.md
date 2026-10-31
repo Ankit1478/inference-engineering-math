@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 12 done, 1 in progress, 24 left, 37 total**
+**Progress: 13 done, 24 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -20,12 +20,12 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [Rank and low-rank (LoRA), already known](01-linear-algebra/08-rank-and-low-rank-lora.md)
 - ✅ [SVD (idea only)](01-linear-algebra/09-svd.md)
 
-## Section 2: Numbers inside computers (3/7)
+## Section 2: Numbers inside computers (4/7)
 
 - ✅ [Bits and bytes](02-numbers-inside-computers/01-bits-and-bytes.md)
 - ✅ [Binary integers (INT8, INT4)](02-numbers-inside-computers/02-binary-integers.md)
 - ✅ [Floating point: FP32, FP16, BF16](02-numbers-inside-computers/03-floating-point-fp32-fp16-bf16.md) ⭐
-- 🟡 [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐ (basics done; next: accuracy loss, INT4, the "one huge number" problem, groups)
+- ✅ [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐
 - ⬜ Rounding errors and overflow
 - ⬜ FP8 ⭐
 - ⬜ What gets quantized: weights, activations, KV cache ⭐

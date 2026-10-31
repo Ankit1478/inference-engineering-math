@@ -101,16 +101,84 @@ So always calculate the scale from the biggest number, so that the biggest numbe
 
 Multiplying and dividing are the same idea: dividing by 0.2 is the same as multiplying by 5.
 
-### We lose a little accuracy
+### Why we lose accuracy
 
-Take 0.5 with a scale of 0.2:
+You already know rounding: `2.7 → 3`. The number moved by 0.3. **That small change is the error.**
+
+Think of money. If you only have **₹2 coins**, you can pay ₹2, ₹4, ₹6… but never ₹5. You are always off a little.
+
+| Price | What you pay | Off by |
+|---|---|---|
+| ₹4 | ₹4 | ₹0 ✅ |
+| ₹5 | ₹4 or ₹6 | ₹1 |
+| ₹7 | ₹6 or ₹8 | ₹1 |
+
+**The scale is the coin size.** With scale 0.2 we can only store 0, 0.2, 0.4, 0.6… so 0.5 becomes 0.6:
 
 ```
 0.5 ÷ 0.2 = 2.5  →  round  →  3
-3 × 0.2   = 0.6
+3 × 0.2   = 0.6       (off by 0.1)
 ```
 
-We put in **0.5** and got back **0.6**. That small difference is the price we pay for saving memory.
+- **Small coins** (small scale): off by a little ✅
+- **Big coins** (big scale): off by a lot ❌
+
+### INT4: a smaller box
+
+| Box | Holds | Size per number | 70B model |
+|---|---|---|---|
+| INT8 | -127 to 127 | 1 byte | 70 GB |
+| INT4 | -7 to 7 | ½ byte | **35 GB** |
+
+INT4 makes the model half the size again. The catch: fewer whole numbers means bigger coins, so bigger errors.
+
+Biggest number 1.4, storing 0.5:
+
+```
+INT8:  scale = 1.4 ÷ 127 = 0.011   →  0.5 comes back as 0.496   (off by 0.004) ✅
+INT4:  scale = 1.4 ÷ 7   = 0.2     →  0.5 comes back as 0.6     (off by 0.1)   ❌
+```
+
+| | INT8 | INT4 |
+|---|---|---|
+| Size | Bigger | **Smaller** ✅ |
+| Speed | Fast | **Faster** ✅ |
+| Accuracy | **Very good** ✅ | A bit worse |
+
+Most people still use INT4, because the model usually stays good enough and the savings are huge.
+
+### The "one giant number" problem (outliers)
+
+**Group photo 📸:** you photograph 3 kids, and everyone is clear. Then a **giant** joins. To fit the giant, the camera zooms out a lot, and the kids become tiny dots you can't see.
+
+Quantization is the same:
+
+- **Camera zoom** = the scale
+- **Kids** = the many small numbers
+- **Giant** = one huge number (called an **outlier**)
+
+The scale must fit the biggest number. One giant number makes it "zoom out", and all the small numbers become **0**:
+
+```
+Numbers: 0.3, -0.2, 0.1, 7.0    (INT4)
+scale = 7.0 ÷ 7 = 1.0
+
+0.3 → 0    -0.2 → 0    0.1 → 0    7.0 → 7
+```
+
+Real models **do** have a few giant numbers among millions of small ones. This is the biggest problem in quantization.
+
+### The fix: separate photos (groups)
+
+Split the numbers into **small groups** (usually 128 numbers each) and give **each group its own scale**.
+
+```
+Photo 1: 😀😀😀   → zoomed in, clear ✅
+Photo 2: 😀😀😀   → zoomed in, clear ✅
+Photo 3: 😀🧍     → zoomed out for the giant
+```
+
+The giant only spoils **its own group**. The cost is a tiny bit of extra memory to save one scale per group, and it's worth it. Real tools like **GPTQ** and **AWQ** use this trick.
 
 ## Inference connection
 
@@ -126,34 +194,28 @@ Smaller model, so less to read per word, so faster words and cheaper serving.
 
 ## Remember
 
-- A model is a list of numbers (weights). Some are positive, some negative.
-- We store them as small whole numbers to save memory and go faster.
-- `scale = biggest number ÷ biggest whole number allowed`
-- `store = round(number ÷ scale)`
-- `back = stored × scale`
-- The scale is calculated from the biggest number, so nothing overflows.
-- We lose a little accuracy (0.5 came back as 0.6).
-
-## Still to learn
-
-- [ ] Why some accuracy gets lost
-- [ ] Using fewer bits (INT4)
-- [ ] The "one huge number" problem
-- [ ] The fix: splitting numbers into small groups
+1. A model is a list of numbers (weights). Some are positive, some negative.
+2. We store them as small whole numbers to make the model smaller and faster.
+3. `scale = biggest number ÷ box edge` → `store = round(number ÷ scale)` → `back = stored × scale`
+4. Rounding loses a little accuracy. Bigger coins (scale) mean more error.
+5. INT4 is half the size of INT8, but has bigger errors.
+6. One giant number (outlier) makes small numbers become 0. Fix: split into groups, each with its own scale.
 
 ## Quick check
 
-The box holds -10 to 10. Numbers: `4.0, -2.0, 1.0`
-
-1. What is the scale?
-2. What whole numbers get stored?
-3. Why would multiplying by 100 be a bad choice?
+1. The box holds -10 to 10. Numbers: `4.0, -2.0, 1.0`. What is the scale, and what whole numbers get stored?
+2. You only have ₹5 coins. Something costs ₹12. What do you pay, and how much are you off by?
+3. Biggest number is 2.1. What is the scale in INT4 (box edge 7)?
+4. Why does one giant number make the small numbers disappear?
+5. How do groups fix it?
 
 <details>
 <summary>Answers</summary>
 
-1. scale = 4.0 ÷ 10 = **0.4**
-2. 4.0 ÷ 0.4 = **10**, -2.0 ÷ 0.4 = **-5**, 1.0 ÷ 0.4 = 2.5 → **3** (2 is also acceptable)
-3. 4.0 × 100 = 400, which is far past the box edge of 10, so it overflows.
+1. scale = 4.0 ÷ 10 = **0.4**. Stored: **10, -5, 3** (1.0 ÷ 0.4 = 2.5, so 2 is also acceptable)
+2. Pay **₹10**, off by **₹2**
+3. 2.1 ÷ 7 = **0.3**
+4. The scale comes from the biggest number, so it becomes huge, and small numbers round to 0. Like a camera zooming out for a giant, so the kids become dots.
+5. Each group gets its own scale, so a giant only spoils its own group. The other groups stay accurate.
 
 </details>
