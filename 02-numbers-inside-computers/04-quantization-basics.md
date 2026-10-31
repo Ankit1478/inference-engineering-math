@@ -2,6 +2,33 @@
 
 **Quantization means storing the model's decimal numbers as small whole numbers, so the model gets smaller and faster.**
 
+## Quick summary (read this first)
+
+A model is a list of decimal numbers, some positive and some negative. The GPU *can* store decimals, but we choose whole numbers because they are smaller.
+
+1. Find the biggest number, ignoring the minus sign.
+2. **Scale** = biggest ÷ box edge (127 for INT8, 7 for INT4).
+3. **Store** = round(number ÷ scale).
+4. **Turn back** = stored × scale.
+5. You lose a little accuracy. INT4 loses more than INT8.
+6. A giant number spoils the scale, so cut the list into groups of 128, each with its own scale.
+
+Example, biggest number 22 in INT8:
+
+```
+scale = 22 ÷ 127 = 0.17
+5.0 ÷ 0.17 = 29.4 → round → 29      (store 29)
+29 × 0.17 = 4.93                    (turn back, close to 5.0)
+```
+
+### Common mistakes
+
+| ❌ Wrong | ✅ Right |
+|---|---|
+| "Divide by any whole number that suits" | Divide by the **box edge**, which the format decides: 127 for INT8, 7 for INT4 |
+| "Step 2 is just round" | **Divide by the scale first**, then round |
+| "Move the giant number into its own group" | Cut the list into equal groups **in order** (every 128 numbers). The giant stays where it is and only spoils its own group. |
+
 ## Why this matters for inference
 
 - A model is just a long list of numbers, like `0.8, -1.5, 2.0, 0.3, ...`
