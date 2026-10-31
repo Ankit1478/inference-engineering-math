@@ -30,32 +30,32 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
 - 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
 
-## KV Cache deep dive ⭐ (studying now, 3/20)
+## KV Cache deep dive ⭐ (studying now, 11/20)
 
 I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
 
-**Basics**
+**[1. Basics](kv-cache-deep-dive/01-basics.md)** ✅
 
 - ✅ How an LLM writes: one word at a time, looking back at all old words
 - ✅ Attention basics: Q, K, V
 - ✅ Without cache vs with cache: make K and V once and save them (about 500× less work for 1,000 words)
 
-**Core** ⭐
+**[2. Core](kv-cache-deep-dive/02-core.md)** ⭐ ✅
 
-- ⬜ Why we save K and V, but not Q
-- ⬜ Prefill vs decode
-- ⬜ KV cache size formula: `2 × layers × KV heads × head size × bytes × words × users`
-- ⬜ Why decode is slow: limited by memory speed, not maths
+- ✅ Why we save K and V, but not Q
+- ✅ Prefill vs decode
+- ✅ KV cache size formula: `2 × layers × KV heads × head size × bytes × words × users`
+- ✅ Why decode is slow: limited by memory speed, not maths
 
-**Making it smaller** ⭐
+**[3. Making it smaller](kv-cache-deep-dive/03-making-it-smaller.md)** ⭐ ✅
 
-- ⬜ MHA → MQA → GQA
-- ⬜ FP8 KV cache
-- ⬜ Sliding window
+- ✅ MHA → MQA → GQA
+- ✅ FP8 KV cache
+- ✅ Sliding window
 
-**Managing it on a real server** ⭐
+**[4. Managing it on a real server](kv-cache-deep-dive/04-managing-it-on-a-server.md)** ⭐ 🟡
 
-- ⬜ The waste problem (fragmentation)
+- ✅ The waste problem (fragmentation)
 - ⬜ PagedAttention (vLLM)
 - ⬜ Continuous batching
 - ⬜ Prefix caching
