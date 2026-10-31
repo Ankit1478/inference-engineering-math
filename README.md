@@ -28,7 +28,49 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐
 - ✅ [Rounding errors and overflow](02-numbers-inside-computers/05-rounding-errors-and-overflow.md)
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
-- ⬜ What gets quantized: weights, activations, KV cache ⭐
+- 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
+
+## KV Cache deep dive ⭐ (studying now, 3/20)
+
+I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
+
+**Basics**
+
+- ✅ How an LLM writes: one word at a time, looking back at all old words
+- ✅ Attention basics: Q, K, V
+- ✅ Without cache vs with cache: make K and V once and save them (about 500× less work for 1,000 words)
+
+**Core** ⭐
+
+- ⬜ Why we save K and V, but not Q
+- ⬜ Prefill vs decode
+- ⬜ KV cache size formula: `2 × layers × KV heads × head size × bytes × words × users`
+- ⬜ Why decode is slow: limited by memory speed, not maths
+
+**Making it smaller** ⭐
+
+- ⬜ MHA → MQA → GQA
+- ⬜ FP8 KV cache
+- ⬜ Sliding window
+
+**Managing it on a real server** ⭐
+
+- ⬜ The waste problem (fragmentation)
+- ⬜ PagedAttention (vLLM)
+- ⬜ Continuous batching
+- ⬜ Prefix caching
+
+**Advanced (later)**
+
+- ⬜ Offloading to CPU memory
+- ⬜ Eviction: which old notes to throw away
+- ⬜ Disaggregation: prefill and decode on different GPUs
+
+**Build it in code**
+
+- ⬜ Attention without a cache in PyTorch
+- ⬜ Attention with a cache, then compare the speed
+- ⬜ A simple paged KV cache
 
 ## Section 3: Functions used in AI (0/4)
 
@@ -51,7 +93,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ⬜ Attention formula: `softmax(QKᵀ / √d) × V` ⭐
 - ⬜ Multi-head attention
 - ⬜ Feed-forward layers (mostly done)
-- ⬜ KV cache and its size formula ⭐
+- ⬜ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
 ## Section 6: Performance math ⭐ (0/7)
 
@@ -78,6 +120,9 @@ Read time:           model size ÷ memory bandwidth
 Scale:               scale = biggest number ÷ biggest whole number allowed
 Quantize:            stored = round(number ÷ scale)
 Dequantize:          back = stored × scale
+GPU memory needed:   weights + KV cache + about 10% extra
+KV cache per word:   2 × layers × KV heads × head size × bytes
+KV cache total:      KV cache per word × words × users
 ```
 
 ## After the math
