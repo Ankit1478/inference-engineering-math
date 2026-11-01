@@ -30,7 +30,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
 - 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
 
-## KV Cache deep dive ⭐ (studying now, 11/20)
+## KV Cache deep dive ⭐ (studying now, 12/20)
 
 I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
 
@@ -56,7 +56,7 @@ I'm learning the KV cache properly before going on. I already know transformers,
 **[4. Managing it on a real server](kv-cache-deep-dive/04-managing-it-on-a-server.md)** ⭐ 🟡
 
 - ✅ The waste problem (fragmentation)
-- ⬜ PagedAttention (vLLM)
+- ✅ PagedAttention (vLLM): small pages, given only when needed, stored anywhere
 - ⬜ Continuous batching
 - ⬜ Prefix caching
 
