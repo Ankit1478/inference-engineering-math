@@ -30,7 +30,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
 - 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
 
-## KV Cache deep dive ⭐ (studying now, 12/20)
+## KV Cache deep dive ⭐ (studying now, 15/20)
 
 I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
 
@@ -53,16 +53,16 @@ I'm learning the KV cache properly before going on. I already know transformers,
 - ✅ FP8 KV cache
 - ✅ Sliding window
 
-**[4. Managing it on a real server](kv-cache-deep-dive/04-managing-it-on-a-server.md)** ⭐ 🟡
+**[4. Managing it on a real server](kv-cache-deep-dive/04-managing-it-on-a-server.md)** ⭐ ✅
 
 - ✅ The waste problem (fragmentation)
 - ✅ PagedAttention (vLLM): small pages, given only when needed, stored anywhere
-- ⬜ Continuous batching
-- ⬜ Prefix caching
+- ✅ Continuous batching: when one user finishes, the next takes their seat right away
+- ✅ Prefix caching: reuse K,V of the same start (saves the question, not the answer)
 
-**Advanced (later)**
+**[5. Advanced](kv-cache-deep-dive/05-advanced.md)** 🟡
 
-- ⬜ Offloading to CPU memory
+- ✅ Offloading to CPU memory: move unused K,V out of the GPU, bring it back later
 - ⬜ Eviction: which old notes to throw away
 - ⬜ Disaggregation: prefill and decode on different GPUs
 
