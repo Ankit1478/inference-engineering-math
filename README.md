@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 15 done, 22 left, 37 total**
+**Progress: 16 done, 21 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -30,9 +30,9 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
 - 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
 
-## KV Cache deep dive ⭐ (studying now, 18/20)
+## KV Cache deep dive ⭐ ✅ (20/20)
 
-I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
+I learned the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
 
 **[1. Basics](kv-cache-deep-dive/01-basics.md)** ✅
 
@@ -66,11 +66,11 @@ I'm learning the KV cache properly before going on. I already know transformers,
 - ✅ Eviction: which old notes to throw away (LRU: used longest ago goes first)
 - ✅ Disaggregation: prefill and decode on different GPUs (the KV cache is sent between them)
 
-**[6. Build it in code](kv-cache-deep-dive/06-build-it-in-code.md)** 🟡
+**[6. Build it in code](kv-cache-deep-dive/06-build-it-in-code.md)** ✅
 
 - ✅ Attention without a cache in PyTorch ([code](kv-cache-deep-dive/code/01_attention_no_cache.py))
-- ⬜ Attention with a cache, then compare the speed
-- ⬜ A simple paged KV cache
+- ✅ Attention with a cache, then compare the speed: same answer, 2–24× faster ([code](kv-cache-deep-dive/code/02_attention_with_cache.py))
+- ✅ A simple paged KV cache ([code](kv-cache-deep-dive/code/03_paged_kv_cache.py))
 
 ## Section 3: Functions used in AI (0/4)
 
@@ -87,13 +87,13 @@ I'm learning the KV cache properly before going on. I already know transformers,
 - ⬜ Entropy, cross-entropy, perplexity
 - ⬜ KL divergence
 
-## Section 5: Transformer math ⭐ (0/5)
+## Section 5: Transformer math ⭐ (1/5)
 
 - ⬜ Embeddings (word → vector)
 - ⬜ Attention formula: `softmax(QKᵀ / √d) × V` ⭐
 - ⬜ Multi-head attention
 - ⬜ Feed-forward layers (mostly done)
-- ⬜ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
+- ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
 ## Section 6: Performance math ⭐ (0/7)
 
