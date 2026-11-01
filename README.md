@@ -30,7 +30,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
 - 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
 
-## KV Cache deep dive ⭐ (studying now, 15/20)
+## KV Cache deep dive ⭐ (studying now, 18/20)
 
 I'm learning the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
 
@@ -60,15 +60,15 @@ I'm learning the KV cache properly before going on. I already know transformers,
 - ✅ Continuous batching: when one user finishes, the next takes their seat right away
 - ✅ Prefix caching: reuse K,V of the same start (saves the question, not the answer)
 
-**[5. Advanced](kv-cache-deep-dive/05-advanced.md)** 🟡
+**[5. Advanced](kv-cache-deep-dive/05-advanced.md)** ✅
 
 - ✅ Offloading to CPU memory: move unused K,V out of the GPU, bring it back later
-- ⬜ Eviction: which old notes to throw away
-- ⬜ Disaggregation: prefill and decode on different GPUs
+- ✅ Eviction: which old notes to throw away (LRU: used longest ago goes first)
+- ✅ Disaggregation: prefill and decode on different GPUs (the KV cache is sent between them)
 
-**Build it in code**
+**[6. Build it in code](kv-cache-deep-dive/06-build-it-in-code.md)** 🟡
 
-- ⬜ Attention without a cache in PyTorch
+- ✅ Attention without a cache in PyTorch ([code](kv-cache-deep-dive/code/01_attention_no_cache.py))
 - ⬜ Attention with a cache, then compare the speed
 - ⬜ A simple paged KV cache
 
