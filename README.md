@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 16 done, 21 left, 37 total**
+**Progress: 17 done, 20 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -20,7 +20,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [Rank and low-rank (LoRA), already known](01-linear-algebra/08-rank-and-low-rank-lora.md)
 - ✅ [SVD (idea only)](01-linear-algebra/09-svd.md)
 
-## Section 2: Numbers inside computers (6/7)
+## Section 2: Numbers inside computers ✅ (7/7)
 
 - ✅ [Bits and bytes](02-numbers-inside-computers/01-bits-and-bytes.md)
 - ✅ [Binary integers (INT8, INT4)](02-numbers-inside-computers/02-binary-integers.md)
@@ -28,11 +28,13 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 - ✅ [Quantization basics: scale, round, dequantize](02-numbers-inside-computers/04-quantization-basics.md) ⭐
 - ✅ [Rounding errors and overflow](02-numbers-inside-computers/05-rounding-errors-and-overflow.md)
 - ✅ [FP8](02-numbers-inside-computers/06-fp8.md) ⭐
-- 🟡 What gets quantized: weights, activations, KV cache ⭐ (paused for the KV cache deep dive)
+- ✅ [What gets quantized: weights, activations, KV cache](02-numbers-inside-computers/07-what-gets-quantized.md) ⭐
 
 ## KV Cache deep dive ⭐ ✅ (20/20)
 
 I learned the KV cache properly before going on. I already know transformers, so attention isn't repeated here.
+
+⚡ **[Quick revision: the whole KV cache on one page](kv-cache-deep-dive/00-quick-revision.md)**
 
 **[1. Basics](kv-cache-deep-dive/01-basics.md)** ✅
 
@@ -123,6 +125,8 @@ Dequantize:          back = stored × scale
 GPU memory needed:   weights + KV cache + about 10% extra
 KV cache per word:   2 × layers × KV heads × head size × bytes
 KV cache total:      KV cache per word × words × users
+Users on a GPU:      (GPU memory − weights − extra) ÷ KV per user
+W4A16:               4-bit weights, 16-bit activations
 ```
 
 ## After the math
