@@ -123,3 +123,29 @@ x ÷ RMS:  [0.85, 1.13]
 | **RMSNorm** | Runs **2× per layer**. Needs a sum over the whole vector, so vLLM **fuses** it with the residual add (`fused_add_rms_norm`) |
 | Quantization (2.7) | RMSNorm is kept in **BF16/FP32**, and **outliers** (big std) make activations hard to quantize |
 
+## Remember
+
+- Probability: 0 to 1, all options add up to 1. **AND → multiply, OR → add.**
+- Expected value = sum of (chance × result).
+- Mean = average, variance = average squared distance from the mean, **std = √variance**.
+- **RMSNorm** = x ÷ RMS(x) × weight. It's cheaper than LayerNorm (no mean).
+- Values many std away = **outliers**, which hurt quantization.
+
+## Quick check
+
+1. Next-word chances are Paris 0.7 and Lyon 0.2. What's the chance of all other words together?
+2. 3 guesses, each accepted with 0.9. What's the chance all 3 are accepted?
+3. 80% of answers are 200 tokens, 20% are 1,000. What's the expected length?
+4. What does RMSNorm skip that LayerNorm does?
+5. RMS of `[6, 8]`?
+
+<details>
+<summary>Answers</summary>
+
+1. 1 − 0.7 − 0.2 = **0.1**
+2. 0.9 × 0.9 × 0.9 = **0.73**
+3. 0.8 × 200 + 0.2 × 1,000 = **360 tokens**
+4. **Subtracting the mean.**
+5. Squares 36 and 64 → average 50 → √50 ≈ **7.07**
+
+</details>
