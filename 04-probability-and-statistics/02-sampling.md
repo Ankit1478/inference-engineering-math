@@ -145,3 +145,30 @@ If a guess is rejected, the server re-samples from the target model's leftover c
 
 With batching, the same prompt can be in a batch of 1 or 64. That changes the **order of additions**, so tiny rounding differs (2.5). If two words are almost tied, the top word can flip. Same prompt, slightly different answer.
 
+## Remember
+
+- **Greedy** = always the top word (temperature 0).
+- **Top-k** = keep k words. **Top-p** = keep words until they add up to p. **Min-p** = keep words ≥ p × the top chance.
+- **Re-scale** after trimming, then spin.
+- Top-p and min-p **adapt** to how sure the model is.
+- Sampling over ~128K words × many users needs **fast kernels**.
+- Speculative decoding accepts with **min(1, target ÷ draft)**, so quality is unchanged.
+
+## Quick check
+
+1. Chances: A 0.6, B 0.3, C 0.1. Which words does top-p = 0.85 keep?
+2. Same list, top-k = 1. What is that the same as?
+3. Same list, min_p = 0.4. What's the cut-off, and which words stay?
+4. Draft chance 0.5, target chance 0.2. What's the accept chance?
+5. Why can temperature 0 give different answers on a busy server?
+
+<details>
+<summary>Answers</summary>
+
+1. 0.6 → 0.9 ≥ 0.85, so **A and B**.
+2. **Greedy.**
+3. Cut-off = 0.4 × 0.6 = **0.24**, so **A and B** stay (C at 0.1 is cut).
+4. 0.2 ÷ 0.5 = **0.4**
+5. Different **batch sizes** change the rounding, so near-tied words can **flip**.
+
+</details>
