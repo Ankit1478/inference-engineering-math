@@ -22,3 +22,10 @@
 | Same seed + temperature 0 = always identical output on a server | Not guaranteed. **Batching** can change tiny rounding, so the top word can flip. |
 | Trimmed chances are used as they are | They're **re-scaled** to add up to 1. |
 
+## Why this matters for inference
+
+- Every request sets these in vLLM's `SamplingParams` (`temperature`, `top_k`, `top_p`, `min_p`, `seed`).
+- Wrong settings look like a "bad model": repeating itself (too greedy) or talking nonsense (too random).
+- Sampling over the whole vocabulary for every user is real GPU work.
+- **Speculative decoding** must sample in a special way so the output stays exactly as good.
+
