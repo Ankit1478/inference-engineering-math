@@ -113,3 +113,13 @@ x ÷ RMS:  [0.85, 1.13]
 | Divides by | std | RMS |
 | Cost | more | **less** |
 
+## Inference connection
+
+| Where | What |
+|---|---|
+| Next-word list | Probabilities adding up to 1 (softmax) |
+| Speculative decoding | AND = multiply → chance a guess run is accepted |
+| Capacity planning | Expected answer length → KV cache and cost |
+| **RMSNorm** | Runs **2× per layer**. Needs a sum over the whole vector, so vLLM **fuses** it with the residual add (`fused_add_rms_norm`) |
+| Quantization (2.7) | RMSNorm is kept in **BF16/FP32**, and **outliers** (big std) make activations hard to quantize |
+
