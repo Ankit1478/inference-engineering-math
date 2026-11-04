@@ -118,3 +118,39 @@ n = 8,192 → 67 million scores per head per layer → 134 MB in BF16
 
 32 heads × 32 layers of that would be huge. That's why FlashAttention never stores it.
 
+## Inference connection
+
+| Point | Why it matters |
+|---|---|
+| **Decode reads the whole KV cache** | Cost ∝ context length, memory-bound → PagedAttention, FP8 KV, GQA |
+| **Prefill is n²** | Long prompts are expensive → FlashAttention (chunks + online softmax), chunked prefill |
+| **√d** | Keeps softmax smooth. Engines pass it as `scale = 1/√d` |
+| **Causal mask** | Lets prefill process all prompt tokens at once, in parallel |
+| **Sliding window** | Look at only the last N tokens → cost stops growing (KV cache step 10) |
+
+## Remember
+
+- `softmax(QKᵀ / √d) × V` = **score → scale → mask → softmax → mix**.
+- Q·K = a dot product (how well they match). V = the information that gets mixed.
+- **÷ √d** stops softmax becoming all-or-nothing.
+- Decode: Q is 1 row, cost = **4 × n × hidden** per layer, grows with context.
+- Prefill: an **n × n** score matrix → FlashAttention never stores it.
+
+## Quick check
+
+1. What are the 5 steps of attention, in order?
+2. Head size 64: what number do you divide the scores by?
+3. In decode, what's the shape of the score row for a 1,000-token context?
+4. Why does attention get slower as the chat gets longer, while the FFN doesn't?
+5. Why doesn't FlashAttention store the n × n score matrix?
+
+<details>
+<summary>Answers</summary>
+
+1. Score (QKᵀ) → scale (÷ √d) → mask → softmax → mix (× V).
+2. √64 = **8**
+3. **[1 × 1,000]**
+4. Attention reads **every old token's K and V**. The FFN only processes the **new** token.
+5. It's **n²** in size, too big. FlashAttention works in chunks with online softmax (3.2), so it never needs the full matrix.
+
+</details>
