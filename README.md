@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 17 done, 20 left, 37 total**
+**Progress: 18 done, 19 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -74,9 +74,9 @@ I learned the KV cache properly before going on. I already know transformers, so
 - ✅ Attention with a cache, then compare the speed: same answer, 2–24× faster ([code](kv-cache-deep-dive/code/02_attention_with_cache.py))
 - ✅ A simple paged KV cache ([code](kv-cache-deep-dive/code/03_paged_kv_cache.py))
 
-## Section 3: Functions used in AI (0/4)
+## Section 3: Functions used in AI (1/4)
 
-- ⬜ Exponent (eˣ) and logarithm (log)
+- ✅ [Exponent (eˣ) and logarithm (log)](03-functions-used-in-ai/01-exponent-and-logarithm.md)
 - ⬜ Softmax ⭐
 - ⬜ Activation functions: GELU, SiLU (ReLU done)
 - ⬜ Sin and cos (RoPE)
@@ -127,6 +127,7 @@ KV cache per word:   2 × layers × KV heads × head size × bytes
 KV cache total:      KV cache per word × words × users
 Users on a GPU:      (GPU memory − weights − extra) ÷ KV per user
 W4A16:               4-bit weights, 16-bit activations
+Log rule:            log(a × b) = log a + log b
 ```
 
 ## After the math
