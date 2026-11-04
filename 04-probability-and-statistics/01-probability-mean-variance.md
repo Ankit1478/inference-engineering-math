@@ -28,3 +28,15 @@
 - **RMSNorm** runs twice per layer, so it's a hot kernel to optimise.
 - **Std and outliers** are the reason INT8 activations are hard (2.7).
 
+## Real-life example
+
+### Rolling a die 🎲
+
+| Question | Rule | Answer |
+|---|---|---|
+| Chance of a 6? | 1 of 6 | 1/6 ≈ 0.17 |
+| All 6 options together? | Add up to 1 | 6 × 1/6 = 1 ✅ |
+| A 6 **and** another 6 (2 rolls)? | Multiply | 1/6 × 1/6 = 1/36 |
+| A 5 **or** a 6? | Add | 1/6 + 1/6 = 1/3 |
+| Average roll (expected value)? | Average of results | (1+2+3+4+5+6) ÷ 6 = **3.5** |
+
