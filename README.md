@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 19 done, 18 left, 37 total**
+**Progress: 20 done, 17 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -74,11 +74,11 @@ I learned the KV cache properly before going on. I already know transformers, so
 - ✅ Attention with a cache, then compare the speed: same answer, 2–24× faster ([code](kv-cache-deep-dive/code/02_attention_with_cache.py))
 - ✅ A simple paged KV cache ([code](kv-cache-deep-dive/code/03_paged_kv_cache.py))
 
-## Section 3: Functions used in AI (2/4)
+## Section 3: Functions used in AI (3/4)
 
 - ✅ [Exponent (eˣ) and logarithm (log)](03-functions-used-in-ai/01-exponent-and-logarithm.md)
 - ✅ [Softmax](03-functions-used-in-ai/02-softmax.md) ⭐
-- ⬜ Activation functions: GELU, SiLU (ReLU done)
+- ✅ [Activation functions: GELU, SiLU, SwiGLU](03-functions-used-in-ai/03-activation-functions-gelu-silu.md)
 - ⬜ Sin and cos (RoPE)
 
 ## Section 4: Probability and Statistics (0/5)
@@ -130,6 +130,7 @@ W4A16:               4-bit weights, 16-bit activations
 Log rule:            log(a × b) = log a + log b
 Softmax:             eˣⁱ ÷ sum of all eˣ  (subtract the max first)
 Temperature:         softmax(scores ÷ T)
+SwiGLU FFN:          Down( SiLU(Gate·x) × Up·x )  → 3 matrices
 ```
 
 ## After the math
