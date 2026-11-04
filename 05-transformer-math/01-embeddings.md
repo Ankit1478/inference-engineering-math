@@ -43,3 +43,67 @@ Imagine a dictionary where each word, instead of a definition, has a **row of 4,
 
 Words with similar meanings ("king", "queen") have rows that point in similar directions, so their **dot product** (1.1) is high.
 
+## The math
+
+### 1. Text → token IDs
+
+```
+"Hello world" → [9906, 1917]      (2 tokens)
+```
+
+Rule of thumb for English: **1 token ≈ 0.75 words**, so 1,000 words ≈ 1,333 tokens.
+
+### 2. Token IDs → vectors (lookup)
+
+```
+Embedding table E:  [128,256 rows × 4,096 columns]
+
+Token 9906 → E[9906] → a vector of 4,096 numbers
+```
+
+**Shapes:** a batch of 2 users with 10 tokens each:
+
+```
+IDs:     [2, 10]
+Vectors: [2, 10, 4096]     ← the [batch, tokens, hidden] tensor from 1.6
+```
+
+### 3. Size of the tables
+
+```
+Embedding table = 128,256 × 4,096 = 525 million parameters
+In BF16         = 525M × 2 bytes  = 1.05 GB
+```
+
+Llama 3 8B has a **separate** lm_head of the same size, so the two together are **~1.05 billion parameters (2.1 GB)**.
+
+(Some small models **tie** them, using one table for both, to save memory.)
+
+### 4. The lm_head at the end
+
+```
+Final vector [4,096] × lm_head [4,096 × 128,256] → logits [128,256]
+```
+
+One score per token in the vocabulary, then softmax → sampling.
+
+**FLOPs per generated token:**
+
+```
+2 × 4,096 × 128,256 = 1.05 billion FLOPs
+```
+
+That's about **6%** of the whole model's ~16 GFLOPs per token (2 × 8B, from 1.3).
+
+### 5. The whole forward pass (big picture)
+
+```
+text → tokenizer → IDs
+     → embedding lookup
+     → 32 × [ RMSNorm → attention (RoPE, KV cache) → add
+              RMSNorm → FFN (SwiGLU)               → add ]
+     → RMSNorm → lm_head → logits → softmax → sampling → next token
+```
+
+Lessons 5.2–5.4 cover the attention and FFN parts.
+
