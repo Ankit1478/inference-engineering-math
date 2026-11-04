@@ -108,3 +108,40 @@ scores → penalties → ÷ temperature → softmax → top-k → top-p / min-p 
 | Normal chat | temperature **0.7**, top-p **0.9** |
 | Creative writing | temperature **1.0**, top-p **0.95** |
 
+## Inference connection
+
+### 1. Sampling has a cost
+
+- Every token, for every user, picks from **~128,000 words** (Llama 3).
+- Top-p needs the words **sorted**, and sorting 128K numbers × 256 users every step is slow.
+- So engines use special kernels (e.g. FlashInfer's sampling) that **skip the full sort**.
+
+### 2. Penalties
+
+| Setting | What it does |
+|---|---|
+| `repetition_penalty` | Lowers the score of words already used |
+| `presence_penalty` | A fixed penalty if the word has appeared at all |
+| `frequency_penalty` | A bigger penalty the more times it has appeared |
+
+These need to know **which words were used before** for each user, which is extra bookkeeping on the server.
+
+### 3. Speculative decoding's accept rule ⭐
+
+A small "draft" model guesses a word, and the big "target" model checks it:
+
+```
+Accept the guess with chance = min(1, target chance ÷ draft chance)
+```
+
+| Word | Draft chance | Target chance | Accept chance |
+|---|---|---|---|
+| Paris | 0.80 | 0.60 | 0.60 ÷ 0.80 = **0.75** |
+| Lyon | 0.10 | 0.30 | min(1, 3) = **1** |
+
+If a guess is rejected, the server re-samples from the target model's leftover chances. The result is **exactly the same quality** as the big model alone, just faster.
+
+### 4. Temperature 0 isn't always identical
+
+With batching, the same prompt can be in a batch of 1 or 64. That changes the **order of additions**, so tiny rounding differs (2.5). If two words are almost tied, the top word can flip. Same prompt, slightly different answer.
+
