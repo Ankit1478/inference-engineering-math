@@ -107,3 +107,40 @@ text → tokenizer → IDs
 
 Lessons 5.2–5.4 cover the attention and FFN parts.
 
+## Inference connection
+
+| Point | Why it matters |
+|---|---|
+| **Everything is in tokens** | Throughput (tokens/sec), price per million tokens, `max_model_len`, KV cache per token |
+| **Embedding = lookup** | Almost free: read one row (4,096 × 2 bytes = 8 KB) per token |
+| **lm_head = big matmul** | ~1 GFLOP per token, and its 1 GB of weights is read every decode step |
+| **Big vocabulary** | Llama 2 had 32K tokens and Llama 3 has 128K. Text uses fewer tokens, but the lm_head and sampling cost more |
+| **Tensor parallel** | vLLM splits the vocab rows across GPUs (`VocabParallelEmbedding`, `ParallelLMHead`) |
+| **Prefill vs decode** | In prefill, the lm_head only needs to run on the **last** token, because only that one picks the next word |
+
+## Remember
+
+- Tokenizer: text → IDs. **1 token ≈ ¾ word.**
+- Embedding = **lookup** in a `[vocab × hidden]` table.
+- lm_head = vector → a score for every token → softmax → sampling.
+- Llama 3 8B: 128,256 × 4,096 → **525M** per table, ~**1B** for both.
+- The lm_head costs **~1 GFLOP per token** and is read every decode step.
+
+## Quick check
+
+1. Is the embedding step a matmul or a lookup?
+2. A user's prompt is 3,000 English words. Roughly how many tokens is that?
+3. What does the lm_head output, and how long is that list for Llama 3?
+4. Why does a bigger vocabulary make decode a bit slower?
+5. During prefill of a 1,000-token prompt, for how many tokens must the lm_head run?
+
+<details>
+<summary>Answers</summary>
+
+1. A **lookup** (read one row).
+2. 3,000 ÷ 0.75 ≈ **4,000 tokens**.
+3. **Logits**: one score per token, **128,256** of them.
+4. The lm_head matmul and the sampling both grow with the vocabulary size.
+5. **1**, the last token. Only it predicts the next word.
+
+</details>
