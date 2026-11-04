@@ -20,3 +20,26 @@
 | Tokens per second = words per second | 1 token ≈ ¾ word, so **100 tokens ≈ 75 words**. |
 | The embedding table is the only vocab-sized part | The **lm_head** is the same size and is used every token. |
 
+## Why this matters for inference
+
+- Everything is counted in **tokens**: speed (tokens/sec), price (per million tokens), context length, KV cache size.
+- The **lm_head** is one of the biggest single matmuls in the model, and it runs for every generated token.
+- **Vocabulary size** decides the cost of the lm_head and of sampling (4.2).
+- The embedding table is split across GPUs in tensor parallel (vLLM: `VocabParallelEmbedding`).
+
+## Real-life example
+
+### A dictionary with coordinates 📖
+
+Imagine a dictionary where each word, instead of a definition, has a **row of 4,096 numbers** describing its meaning.
+
+| Step | Real life | Model |
+|---|---|---|
+| 1 | Split the sentence into words | **Tokenizer** → IDs |
+| 2 | Look up each word's row | **Embedding** lookup |
+| 3 | Think about the meaning | 32 transformer layers |
+| 4 | Compare your idea to every word in the dictionary and score each | **lm_head** → logits |
+| 5 | Pick a word | softmax + sampling |
+
+Words with similar meanings ("king", "queen") have rows that point in similar directions, so their **dot product** (1.1) is high.
+
