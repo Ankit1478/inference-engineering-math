@@ -43,3 +43,49 @@ After a meeting (attention), everyone goes back to their desk to **think alone**
 
 The hospital has **8 doctors**, but each patient sees only the **2** that a receptionist (the **router**) picks. You still pay salaries for all 8 (**memory**), but each visit only uses 2 doctors' time (**compute**).
 
+## The math
+
+### 1. Shapes (Llama 3 8B, one token)
+
+```
+x:                  [4,096]
+Gate · x:           [4,096] × [4,096 × 14,336] → [14,336]
+Up · x:             [4,096] × [4,096 × 14,336] → [14,336]
+SiLU(gate) × up:    [14,336]   (element by element)
+Down:               [14,336] × [14,336 × 4,096] → [4,096]
+```
+
+### 2. Parameters and FLOPs
+
+```
+Per layer:  3 × 4,096 × 14,336 = 176M parameters
+× 32 layers = 5.64 billion (~70% of 8B)
+
+FLOPs per token per layer = 2 × 176M = 352M
+× 32 layers               = 11.3 GFLOPs per token
+```
+
+### 3. Where Llama 3 8B's parameters go
+
+| Part | Parameters | Share |
+|---|---|---|
+| **FFN** (5.4) | 5.64B | **~70%** |
+| Attention (5.3) | 1.34B | ~17% |
+| Embedding + lm_head (5.1) | 1.05B | ~13% |
+| RMSNorm | tiny | ~0% |
+| **Total** | **~8.03B** | ✅ |
+
+### 4. MoE maths
+
+**Mixtral 8x7B:** 8 experts per layer, the router picks **2** per token.
+
+| | Value |
+|---|---|
+| Total parameters (must fit in memory) | ~47B → **~94 GB in BF16** |
+| Active parameters per token (compute) | ~13B → **~26 GFLOPs per token** |
+
+```
+Memory:  like a 47B model
+Compute: like a 13B model
+```
+
