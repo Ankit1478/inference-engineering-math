@@ -20,3 +20,11 @@
 | Variance and std are the same | Std = **√variance**. Std is in the same units as the data. |
 | RMSNorm = LayerNorm | RMSNorm **skips subtracting the mean**, so it's cheaper. |
 
+## Why this matters for inference
+
+- The model's output is a **probability list** over the next word (softmax, 3.2).
+- **AND = multiply** explains logprobs (3.1) and speculative decoding.
+- **Expected value** is used for capacity planning: "how many tokens will an average answer use?"
+- **RMSNorm** runs twice per layer, so it's a hot kernel to optimise.
+- **Std and outliers** are the reason INT8 activations are hard (2.7).
+
