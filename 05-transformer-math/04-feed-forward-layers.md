@@ -21,3 +21,25 @@
 | MoE 47B with 13B active needs memory for 13B | It needs memory for **all 47B**. Only the **compute** is 13B. |
 | FFN cost grows with chat length | It doesn't. That's attention (5.2). |
 
+## Why this matters for inference
+
+- Most of the bytes read in each decode step are **FFN weights**, so the FFN decides decode speed.
+- Quantizing the FFN gives the biggest memory saving (2.7).
+- Most big new models (DeepSeek-V3, Mixtral, Qwen MoE, Llama 4) are **MoE**, which changes the memory vs compute maths.
+
+## Real-life example
+
+### Thinking it over alone 🧠
+
+After a meeting (attention), everyone goes back to their desk to **think alone** (FFN):
+
+| Step | Real life | FFN |
+|---|---|---|
+| 1 | Spread all your notes out on a big table | **Up**: 4,096 → 14,336 |
+| 2 | Decide which notes matter | **Gate + SiLU** |
+| 3 | Write a short summary | **Down**: 14,336 → 4,096 |
+
+### MoE = a hospital with specialists 🏥
+
+The hospital has **8 doctors**, but each patient sees only the **2** that a receptionist (the **router**) picks. You still pay salaries for all 8 (**memory**), but each visit only uses 2 doctors' time (**compute**).
+
