@@ -96,7 +96,7 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Embeddings (word → vector) and lm_head](05-transformer-math/01-embeddings.md)
 - ✅ [Attention formula: `softmax(QKᵀ / √d) × V`](05-transformer-math/02-attention-formula.md) ⭐
 - ✅ [Multi-head attention and GQA](05-transformer-math/03-multi-head-attention.md)
-- ✅ [Feed-forward layers](03-functions-used-in-ai/03-activation-functions-gelu-silu.md), already known (SwiGLU in 3.3)
+- ✅ [Feed-forward layers and MoE](05-transformer-math/04-feed-forward-layers.md) (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
 ## Section 6: Performance math ⭐ (0/7)
@@ -148,6 +148,8 @@ lm_head FLOPs:       2 × hidden × vocab per token
 Attention:           softmax(QKᵀ / √d) × V
 Decode attn FLOPs:   4 × context length × hidden, per layer
 Heads:               hidden ÷ head size  (4,096 ÷ 128 = 32)
+FFN params (SwiGLU): 3 × hidden × FFN size, per layer
+MoE:                 memory = all parameters, compute = active parameters
 ```
 
 ## After the math
