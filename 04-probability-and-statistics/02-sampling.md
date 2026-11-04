@@ -43,3 +43,68 @@ Each word gets a slice of the wheel the size of its chance.
 
 The tiny slices are usually junk words ("Pizza" as the capital of France), so cutting them keeps answers sensible but still varied.
 
+## The math
+
+### The example list
+
+After softmax for "The capital of France is …":
+
+| Word | Chance |
+|---|---|
+| Paris | 0.50 |
+| Lyon | 0.20 |
+| Nice | 0.16 |
+| Rome | 0.09 |
+| Pizza | 0.05 |
+
+### 1. Greedy
+
+```
+Always "Paris"
+```
+
+### 2. Top-k (k = 2)
+
+```
+Keep:      Paris 0.50, Lyon 0.20      (sum 0.70)
+Re-scale:  Paris 0.71, Lyon 0.29
+```
+
+### 3. Top-p (p = 0.8)
+
+Add up from the top until you reach 0.8:
+
+```
+Paris 0.50 → 0.50
+Lyon  0.20 → 0.70
+Nice  0.16 → 0.86 ≥ 0.8, stop
+
+Keep:      Paris, Lyon, Nice           (sum 0.86)
+Re-scale:  Paris 0.58, Lyon 0.23, Nice 0.19
+```
+
+👉 Top-p **adapts**. If the model is very sure (Paris 0.95), top-p keeps just 1 word. If it's unsure, it keeps many.
+
+### 4. Min-p (min_p = 0.3)
+
+```
+Cut-off = 0.3 × top chance = 0.3 × 0.50 = 0.15
+Keep:     Paris 0.50, Lyon 0.20, Nice 0.16   (all ≥ 0.15)
+```
+
+👉 Also adapts. If the top is 0.95, the cut-off is 0.285, so only Paris is kept.
+
+### 5. The order in vLLM
+
+```
+scores → penalties → ÷ temperature → softmax → top-k → top-p / min-p → re-scale → spin
+```
+
+### 6. Common settings
+
+| Use | Settings |
+|---|---|
+| Code, maths, extraction | temperature **0** (greedy) |
+| Normal chat | temperature **0.7**, top-p **0.9** |
+| Creative writing | temperature **1.0**, top-p **0.95** |
+
