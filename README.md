@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 26 done, 11 left, 37 total**
+**Progress: 30 done, 7 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -89,12 +89,14 @@ I learned the KV cache properly before going on. I already know transformers, so
 - ✅ [Entropy, cross-entropy, perplexity](04-probability-and-statistics/03-entropy-perplexity-kl.md)
 - ✅ [KL divergence](04-probability-and-statistics/03-entropy-perplexity-kl.md)
 
-## Section 5: Transformer math ⭐ (1/5)
+## Section 5: Transformer math ⭐ ✅ (5/5)
 
-- ⬜ Embeddings (word → vector)
-- ⬜ Attention formula: `softmax(QKᵀ / √d) × V` ⭐
-- ⬜ Multi-head attention
-- ⬜ Feed-forward layers (mostly done)
+I already know transformers, so these are marked as known (no lessons). The inference parts (FLOPs, memory) are covered in Section 6.
+
+- ✅ Embeddings (word → vector), already known
+- ✅ Attention formula: `softmax(QKᵀ / √d) × V` ⭐, already known
+- ✅ Multi-head attention, already known
+- ✅ [Feed-forward layers](03-functions-used-in-ai/03-activation-functions-gelu-silu.md), already known (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
 ## Section 6: Performance math ⭐ (0/7)
