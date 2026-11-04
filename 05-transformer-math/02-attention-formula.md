@@ -21,3 +21,24 @@
 | Prefill stores the full n × n score matrix | **FlashAttention** never stores it: it uses chunks plus online softmax (3.2). |
 | The mask is applied after softmax | It's applied **before**: −∞ → e^(−∞) = 0. |
 
+## Why this matters for inference
+
+- Attention is the only part of the model whose cost depends on **how long the chat is**.
+- Decode attention = reading the KV cache, which is **memory-bound** (KV cache step 7).
+- Prefill attention = an **n × n** score matrix, so cost grows with **n²**.
+- Long-context serving, FlashAttention, PagedAttention and sliding windows all exist because of this formula.
+
+## Real-life example
+
+### Asking a room for help 🙋
+
+You walk into a room with a **question** (Q). Everyone wears a **name badge** (K) and holds a **notebook** (V).
+
+| Step | Real life | Formula |
+|---|---|---|
+| 1 | Compare your question with each badge | `Q·K` scores |
+| 2 | Calm down over-excited scores | ÷ √d |
+| 3 | Ignore people who haven't arrived yet | causal mask |
+| 4 | Decide how much to trust each person (shares add up to 100%) | softmax |
+| 5 | Mix their notebooks by those shares | × V |
+
