@@ -27,3 +27,14 @@
 - Tools like **llama.cpp** report both when you quantize.
 - In speculative decoding, a draft model with **low KL** to the target gets more guesses accepted.
 
+## Real-life example
+
+### A quiz contestant 🎤
+
+| Situation | Feeling | Score |
+|---|---|---|
+| Sure of the answer, and it's right | Not surprised | Low surprise ✅ |
+| Gave the right answer only a small chance | Very surprised | High surprise ❌ |
+| Over a whole quiz | Average surprise | **Cross-entropy** |
+| "It's like I was guessing between ~2 options" | | **Perplexity = 2** |
+
