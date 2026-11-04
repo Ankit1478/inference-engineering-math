@@ -118,3 +118,29 @@ Perplexity only looks at **the real word's** chance. KL compares the **whole lis
 
 A draft model whose lists are **close to the target's** (low KL) has more guesses accepted (4.2), so it runs faster.
 
+## Remember
+
+- **Surprise** = −log(chance).
+- **Entropy** = how unsure the model is.
+- **Perplexity** = e^(average surprise on real text) = "confused between ~N words". **Lower is better.**
+- **KL** = how different two lists are. **0 = same.**
+- Use them to check **quantized vs original**, then test real tasks too.
+
+## Quick check
+
+1. Lower or higher perplexity: which is better?
+2. A model gives the real word a chance of 1.0 every time. What's its perplexity?
+3. Original model perplexity 5.0. FP8 is 5.02 and INT4 is 6.5. Which do you ship?
+4. KL between two identical lists?
+5. What does perplexity = 3 mean in plain words?
+
+<details>
+<summary>Answers</summary>
+
+1. **Lower.**
+2. Surprise = 0, so e⁰ = **1** (perfect).
+3. **FP8.** Almost no change. INT4 lost too much.
+4. **0**
+5. The model is about as confused as **choosing between 3 words**.
+
+</details>
