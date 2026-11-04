@@ -89,3 +89,58 @@ Memory:  like a 47B model
 Compute: like a 13B model
 ```
 
+## Inference connection
+
+### 1. Decode reads mostly FFN weights
+
+Per decode step, Llama 3 8B reads ~16 GB of weights in BF16, and ~11 GB of that is FFN. Quantizing the FFN to FP8 or INT4 gives the biggest speed-up (2.7).
+
+### 2. Tensor parallel for the FFN (Megatron trick from 1.7)
+
+| Matrix | Split | Why |
+|---|---|---|
+| Gate, Up | by **columns** | Each GPU makes its own slice of the 14,336, no talking |
+| SiLU × up | local | Element by element, no talking |
+| Down | by **rows** | Each GPU makes a partial result → **1 all-reduce** to add them up |
+
+So the FFN needs only **one** GPU-to-GPU sync per layer.
+
+### 3. Fusion
+
+`SiLU(gate) × up` is cheap maths, so vLLM **fuses** it (`SiluAndMul`, 3.3). Gate and Up are often stored as **one merged matrix** (`gate_up_proj`) so there's one matmul instead of two.
+
+### 4. MoE serving
+
+| Challenge | Why |
+|---|---|
+| Memory | All experts must be loaded |
+| Uneven load | Some experts get many tokens, others few |
+| **Expert parallelism** | Put different experts on different GPUs, and send each token to its experts' GPUs |
+| Small batches | Each expert sees only a few tokens → poor GPU use, memory-bound |
+
+## Remember
+
+- Attention = tokens talk. **FFN = each token thinks alone.**
+- SwiGLU: Gate, Up (4,096 → 14,336), Down (back to 4,096), so **3 matrices**.
+- FFN ≈ **70%** of Llama 3 8B's weights. FLOPs = **2 × parameters**.
+- Tensor parallel: Gate/Up by columns, Down by rows → **1 all-reduce**.
+- **MoE: memory = all experts, compute = the active ones.**
+
+## Quick check
+
+1. Which part of Llama 3 8B has the most parameters?
+2. FFN parameters per layer for hidden 4,096 and FFN size 14,336 (SwiGLU)?
+3. Does the FFN get slower as the chat gets longer?
+4. An MoE model has 100B total and 20B active parameters. How much memory in BF16? FLOPs per token?
+5. How many all-reduces does a tensor-parallel FFN need per layer?
+
+<details>
+<summary>Answers</summary>
+
+1. The **FFN** (~70%).
+2. 3 × 4,096 × 14,336 = **176M**
+3. **No.** It only processes the new token. Attention is the part that grows.
+4. Memory: 100B × 2 = **200 GB**. FLOPs: 2 × 20B = **40 GFLOPs per token**.
+5. **1** (after Down).
+
+</details>
