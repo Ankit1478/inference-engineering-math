@@ -40,3 +40,76 @@
 | A 5 **or** a 6? | Add | 1/6 + 1/6 = 1/3 |
 | Average roll (expected value)? | Average of results | (1+2+3+4+5+6) ÷ 6 = **3.5** |
 
+## The math
+
+### 1. Probability rules
+
+```
+0 ≤ P ≤ 1
+All options add up to 1
+P(A and B) = P(A) × P(B)    (if they don't affect each other)
+P(A or B)  = P(A) + P(B)    (if they can't both happen)
+```
+
+**Inference example: speculative decoding.** A small model guesses 4 words. Each guess is accepted with a chance of 0.8.
+
+```
+Chance that all 4 are accepted = 0.8 × 0.8 × 0.8 × 0.8 = 0.41
+```
+
+👉 Long guesses get rejected often, so the guess length is usually kept small (about 3–5).
+
+### 2. Expected value
+
+```
+Expected value = sum of (chance × result)
+```
+
+**Inference example:** half of your users get 100-token answers and half get 500-token answers.
+
+```
+Expected = 0.5 × 100 + 0.5 × 500 = 300 tokens per answer
+```
+
+👉 Use this to plan KV cache memory and cost per user.
+
+### 3. Mean, variance, std
+
+Data: `[2, 4, 4, 4, 5, 5, 7, 9]`
+
+```
+Mean     = sum ÷ count = 40 ÷ 8 = 5
+Variance = average of (each − mean)²
+         = (9+1+1+1+0+0+4+16) ÷ 8 = 4
+Std      = √4 = 2
+```
+
+| | Means |
+|---|---|
+| Small std | Numbers are close together |
+| Big std | Numbers are spread out |
+
+**Bell curve rule:** about 68% of values sit within 1 std of the mean, and 99.7% within 3 std. A value **20 std away** is a giant **outlier**, which is exactly what breaks INT8 activations (2.7).
+
+### 4. RMSNorm ⭐
+
+```
+RMS(x)     = √(average of x²)
+RMSNorm(x) = x ÷ RMS(x) × weight
+```
+
+**Worked example:** x = `[3, 4]`
+
+```
+Squares:  9, 16 → average 12.5 → RMS = √12.5 = 3.54
+x ÷ RMS:  [0.85, 1.13]
+```
+
+👉 It keeps each vector's size steady, so numbers don't blow up or shrink layer after layer.
+
+| | LayerNorm (GPT-2) | **RMSNorm** (Llama, Mistral, Qwen) |
+|---|---|---|
+| Subtracts the mean | ✅ | ❌ |
+| Divides by | std | RMS |
+| Cost | more | **less** |
+
