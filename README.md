@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 21 done, 16 left, 37 total**
+**Progress: 24 done, 13 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -81,11 +81,11 @@ I learned the KV cache properly before going on. I already know transformers, so
 - ✅ [Activation functions: GELU, SiLU, SwiGLU](03-functions-used-in-ai/03-activation-functions-gelu-silu.md)
 - ✅ [Sin and cos (RoPE)](03-functions-used-in-ai/04-sin-cos-rope.md)
 
-## Section 4: Probability and Statistics (0/5)
+## Section 4: Probability and Statistics (3/5)
 
-- ⬜ Probability basics ⭐
-- ⬜ Mean and variance (LayerNorm / RMSNorm)
-- ⬜ Sampling: temperature, top-k, top-p ⭐
+- ✅ [Probability basics](04-probability-and-statistics/01-probability-mean-variance.md) ⭐
+- ✅ [Mean and variance (LayerNorm / RMSNorm)](04-probability-and-statistics/01-probability-mean-variance.md)
+- ✅ [Sampling: temperature, top-k, top-p](04-probability-and-statistics/02-sampling.md) ⭐
 - ⬜ Entropy, cross-entropy, perplexity
 - ⬜ KL divergence
 
@@ -132,6 +132,12 @@ Softmax:             eˣⁱ ÷ sum of all eˣ  (subtract the max first)
 Temperature:         softmax(scores ÷ T)
 SwiGLU FFN:          Down( SiLU(Gate·x) × Up·x )  → 3 matrices
 Rotate [x, y] by θ:  [x·cos θ − y·sin θ, x·sin θ + y·cos θ]
+AND / OR:            P(A and B) = P(A) × P(B),  P(A or B) = P(A) + P(B)
+Expected value:      sum of (chance × result)
+Std:                 √(average of (x − mean)²)
+RMSNorm:             x ÷ √(average of x²) × weight
+Min-p cut-off:       min_p × top chance
+Spec decode accept:  min(1, target chance ÷ draft chance)
 ```
 
 ## After the math
