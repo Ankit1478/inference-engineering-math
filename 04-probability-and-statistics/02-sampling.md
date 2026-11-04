@@ -29,3 +29,17 @@
 - Sampling over the whole vocabulary for every user is real GPU work.
 - **Speculative decoding** must sample in a special way so the output stays exactly as good.
 
+## Real-life example
+
+### A spinning wheel 🎡
+
+Each word gets a slice of the wheel the size of its chance.
+
+| Method | Wheel |
+|---|---|
+| Greedy | No spin. Just take the biggest slice. |
+| Sampling | Spin the full wheel. |
+| Top-k / top-p / min-p | **Cut off the tiny slices first**, then spin. |
+
+The tiny slices are usually junk words ("Pizza" as the capital of France), so cutting them keeps answers sensible but still varied.
+
