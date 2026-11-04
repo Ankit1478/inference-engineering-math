@@ -38,3 +38,62 @@
 | Over a whole quiz | Average surprise | **Cross-entropy** |
 | "It's like I was guessing between ~2 options" | | **Perplexity = 2** |
 
+## The math
+
+### 1. Surprise = −log(chance)
+
+| Chance of the real word | Surprise |
+|---|---|
+| 1.0 | 0 (no surprise) |
+| 0.5 | 0.69 |
+| 0.1 | 2.30 |
+| 0.01 | 4.61 (very surprised) |
+
+(This is just the log table from 3.1 with the minus sign removed.)
+
+### 2. Entropy = how unsure the model is
+
+| Model's list | Entropy | Meaning |
+|---|---|---|
+| [1.0] | 0 | totally sure |
+| [0.9, 0.05, 0.05] | 0.39 | quite sure |
+| [0.5, 0.5] | 0.69 | torn between 2 |
+| [0.25, 0.25, 0.25, 0.25] | 1.39 | torn between 4 |
+
+### 3. Cross-entropy and perplexity ⭐
+
+Give the model a real text. For each word, check what chance it gave **the real next word**:
+
+```
+Chances it gave the real words:  0.5   0.2   0.8   0.4
+Surprise (−log):                 0.69  1.61  0.22  0.92
+
+Cross-entropy = average = 0.86
+Perplexity    = e^0.86  = 2.36
+```
+
+👉 "The model is about as confused as choosing between **2.4 words**."
+
+Quick sense check: if the model spread its chance evenly over 4 words, perplexity = **4**.
+
+### 4. KL divergence: how different two lists are
+
+```
+KL(P ‖ Q) = sum of  P × log(P ÷ Q)
+```
+
+| Word | Original (P) | Quantized (Q) |
+|---|---|---|
+| Paris | 0.7 | 0.6 |
+| Lyon | 0.2 | 0.3 |
+| Nice | 0.1 | 0.1 |
+
+```
+0.7 × log(0.7/0.6) = +0.108
+0.2 × log(0.2/0.3) = −0.081
+0.1 × log(0.1/0.1) =  0
+KL = 0.027   → very close ✅
+```
+
+👉 **0 = identical.** The bigger it is, the more the quantized model has changed.
+
