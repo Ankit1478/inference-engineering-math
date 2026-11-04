@@ -98,3 +98,52 @@ KV per token = 2 × layers × KV heads × head size × bytes
              = 2 × 32 × 8 × 128 × 2 = 131,072 bytes = 128 KB  ✅ (KV cache step 6)
 ```
 
+## Inference connection
+
+### Tensor parallel splits by heads ⭐
+
+Llama 3 8B on **4 GPUs** (TP = 4):
+
+| GPU | Q heads | KV heads |
+|---|---|---|
+| 0 | 0–7 | 0–1 |
+| 1 | 8–15 | 2–3 |
+| 2 | 16–23 | 4–5 |
+| 3 | 24–31 | 6–7 |
+
+- Each GPU runs **its own heads** with no talking during attention.
+- W_O is split by rows, so the GPUs **add up** their parts once at the end (all-reduce), like the Megatron trick from 1.7.
+- Each GPU only stores **its own KV heads**, so the KV cache is split too.
+
+**Limit:** 8 KV heads → TP = 16 would need **copies** of KV heads (wasted memory). That's why TP is usually ≤ the number of KV heads.
+
+### GQA helps the attention kernel
+
+During decode, 4 Q heads read the **same** K,V. A good kernel loads K,V **once** and uses it 4 times, so there's less memory traffic.
+
+## Remember
+
+- Multi-head = **split** into heads → attention per head → **join** → W_O.
+- 32 heads × 128 = 4,096. The total work is the same as one big head.
+- **GQA:** 32 Q heads share **8 KV heads** → KV cache ¼.
+- Attention weights ≈ **42M per layer** (~17% of Llama 3 8B).
+- **Tensor parallel** splits by heads, and TP above the KV head count means copying K,V.
+
+## Quick check
+
+1. Hidden size 4,096 and head size 128. How many heads?
+2. 32 Q heads and 8 KV heads. How many Q heads share each KV head?
+3. Does adding more **Q** heads make the KV cache bigger?
+4. Llama 3 8B on 2 GPUs: how many Q heads and KV heads per GPU?
+5. Why is TP = 16 a bad idea for a model with 8 KV heads?
+
+<details>
+<summary>Answers</summary>
+
+1. 4,096 ÷ 128 = **32**
+2. 32 ÷ 8 = **4**
+3. **No.** Only the number of **KV** heads matters.
+4. **16 Q heads and 4 KV heads** each.
+5. There aren't enough KV heads to go round, so they must be **copied**, which wastes memory.
+
+</details>
