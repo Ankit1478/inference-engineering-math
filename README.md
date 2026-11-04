@@ -94,7 +94,7 @@ I learned the KV cache properly before going on. I already know transformers, so
 I already know transformers, so these are revision notes from the inference side: shapes, parameter counts, FLOPs and how each part is served.
 
 - ✅ [Embeddings (word → vector) and lm_head](05-transformer-math/01-embeddings.md)
-- ✅ Attention formula: `softmax(QKᵀ / √d) × V` ⭐, already known
+- ✅ [Attention formula: `softmax(QKᵀ / √d) × V`](05-transformer-math/02-attention-formula.md) ⭐
 - ✅ Multi-head attention, already known
 - ✅ [Feed-forward layers](03-functions-used-in-ai/03-activation-functions-gelu-silu.md), already known (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
@@ -145,6 +145,8 @@ Perplexity:          e^(average surprise on real text)  (lower = better)
 KL(P ‖ Q):           sum of P × log(P ÷ Q)  (0 = same)
 Tokens:              1 token ≈ 0.75 English words
 lm_head FLOPs:       2 × hidden × vocab per token
+Attention:           softmax(QKᵀ / √d) × V
+Decode attn FLOPs:   4 × context length × hidden, per layer
 ```
 
 ## After the math
