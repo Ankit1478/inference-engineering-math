@@ -20,3 +20,26 @@
 | GQA removes Q heads | GQA keeps **all Q heads** and shares **K,V heads**. |
 | Tensor parallel can use any number of GPUs | It splits by **heads**: with 8 KV heads, going above 8 GPUs means copying K,V heads. |
 
+## Why this matters for inference
+
+- The number of **KV heads** decides the KV cache size (the formula from KV cache step 6).
+- Heads are the unit that **tensor parallelism** splits across GPUs.
+- Attention kernels (FlashAttention, PagedAttention) work **per head**, and the GQA layout decides how they share K,V loads.
+
+## Real-life example
+
+### A team reading the same document 👥
+
+One person reading a long contract misses things. Instead, give it to **32 specialists**:
+
+| Specialist | Looks for |
+|---|---|
+| Head 1 | Who is the subject? |
+| Head 2 | What was the previous word? |
+| Head 3 | Dates and numbers |
+| … | … |
+
+Each writes a short note (128 numbers), and the notes are **stapled together** (4,096) and summarised (W_O).
+
+**GQA** = the specialists work in groups of 4 that **share one copy** of the document (K,V), so there are fewer copies to store.
+
