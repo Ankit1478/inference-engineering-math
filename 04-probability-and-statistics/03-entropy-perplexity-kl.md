@@ -97,3 +97,24 @@ KL = 0.027   → very close ✅
 
 👉 **0 = identical.** The bigger it is, the more the quantized model has changed.
 
+## Inference connection
+
+### Checking a quantized model (example numbers)
+
+| Model | Perplexity | KL vs BF16 | Verdict |
+|---|---|---|---|
+| BF16 (original) | 6.10 | 0 | baseline |
+| FP8 | 6.14 | very small | ✅ ship it |
+| INT4 with groups (AWQ) | 6.35 | small | 🟡 test real tasks |
+| INT4 without groups | 7.50 | big | ❌ too much loss |
+
+**How:** run the same text through both models. vLLM can return `prompt_logprobs` (the chance of each real word), then average the surprise and take e^.
+
+### Why also KL?
+
+Perplexity only looks at **the real word's** chance. KL compares the **whole list**, so it catches changes that perplexity misses. llama.cpp shows both when you quantize.
+
+### Speculative decoding
+
+A draft model whose lists are **close to the target's** (low KL) has more guesses accepted (4.2), so it runs faster.
+
