@@ -20,3 +20,10 @@
 | KL can be negative | KL is always **0 or more**. 0 = the same. |
 | Perplexity is all you need | Also run **real tasks** (maths, code, long answers). Perplexity can hide problems. |
 
+## Why this matters for inference
+
+- After FP8 or INT4 (2.6, 2.7), you need a **number** that says "still good" or "broken".
+- Perplexity and KL are quick to compute, with no human checking needed.
+- Tools like **llama.cpp** report both when you quantize.
+- In speculative decoding, a draft model with **low KL** to the target gets more guesses accepted.
+
