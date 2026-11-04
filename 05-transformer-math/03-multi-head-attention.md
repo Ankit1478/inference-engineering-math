@@ -43,3 +43,58 @@ Each writes a short note (128 numbers), and the notes are **stapled together** (
 
 **GQA** = the specialists work in groups of 4 that **share one copy** of the document (K,V), so there are fewer copies to store.
 
+## The math
+
+### 1. Shapes (Llama 3 8B, one token)
+
+```
+x:          [4,096]
+Q = x · W_Q  → [4,096] → split into 32 heads × 128
+K = x · W_K  → [1,024] → split into  8 heads × 128   (GQA)
+V = x · W_V  → [1,024] → split into  8 heads × 128   (GQA)
+```
+
+Each Q head uses the K,V head of its **group**:
+
+```
+Q heads 0–3   → KV head 0
+Q heads 4–7   → KV head 1
+…
+Q heads 28–31 → KV head 7
+```
+
+Each head: `softmax(q·Kᵀ / √128) × V` → [128]
+
+```
+Join 32 heads × 128 → [4,096] → × W_O [4,096 × 4,096] → [4,096]
+```
+
+### 2. Parameters per layer
+
+| Matrix | Shape | Parameters |
+|---|---|---|
+| W_Q | 4,096 × 4,096 | 16.8M |
+| W_K | 4,096 × 1,024 | 4.2M |
+| W_V | 4,096 × 1,024 | 4.2M |
+| W_O | 4,096 × 4,096 | 16.8M |
+| **Total** | | **41.9M** |
+
+× 32 layers = **1.34 billion** → about **17%** of Llama 3 8B.
+
+With full MHA (32 KV heads), W_K and W_V would each be 16.8M, so GQA also saves **25M weights per layer**.
+
+### 3. MHA vs GQA vs MQA (recap from KV cache step 8)
+
+| Type | Q heads | KV heads | KV cache | Used by |
+|---|---|---|---|---|
+| MHA | 32 | 32 | 1× | GPT-2, Llama 1 |
+| **GQA** | 32 | **8** | **¼** | **Llama 3, Mistral, Qwen** |
+| MQA | 32 | 1 | 1/32 | PaLM, Falcon |
+
+### 4. KV cache size uses KV heads
+
+```
+KV per token = 2 × layers × KV heads × head size × bytes
+             = 2 × 32 × 8 × 128 × 2 = 131,072 bytes = 128 KB  ✅ (KV cache step 6)
+```
+
