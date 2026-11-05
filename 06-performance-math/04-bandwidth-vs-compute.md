@@ -55,3 +55,25 @@ Real time   ≈ the BIGGER of the two
 
 👉 **Decode waits for memory. Prefill waits for maths.**
 
+## Step 4: The switch point
+
+Batch decode adds users. The weights are read **once**, but the maths grows with every user:
+
+```
+Memory time:  8 ms (same)
+Maths time:   users × 0.016 ms
+```
+
+| Users | Memory time | Maths time | Limit |
+|---|---|---|---|
+| 1 | 8 ms | 0.016 ms | memory |
+| 64 | 8 ms | 1 ms | memory |
+| **500** | 8 ms | **8 ms** | **equal** ⚖️ |
+| 1,000 | 8 ms | 16 ms | maths |
+
+👉 The switch is at **500**, the same number as Step 1. Every user is one more maths job for each byte read.
+
+**In real life** each user also brings their **own KV cache** to read (6.3 Step 4), so memory time grows too. Decode usually stays **memory-bound**, especially with long chats.
+
+The same rule works for prefill: a prompt **over ~500 tokens** is compute-bound. Under that, it's memory-bound.
+
