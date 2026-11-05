@@ -42,3 +42,16 @@ Real time   ≈ the BIGGER of the two
 
 🍕 **Pizza order:** if the dough takes 8 minutes to arrive and baking takes 1 second, you wait **8 minutes**. A faster oven doesn't help.
 
+## Step 3: Decode vs prefill
+
+| | Decode (1 user, 1 token) | Prefill (2,000-token prompt) |
+|---|---|---|
+| Bytes read | 16 GB (weights) | 16 GB (weights, read **once**) |
+| Memory time | 16 ÷ 2,000 = **8 ms** | **8 ms** |
+| FLOPs | 2 × 8B = 16 GFLOPs | 2 × 8B × 2,000 = 32 TFLOPs |
+| Maths time | **0.016 ms** | **32 ms** |
+| Bigger one | memory | maths |
+| Name | **memory-bound** 🚚 | **compute-bound** 👨‍🍳 |
+
+👉 **Decode waits for memory. Prefill waits for maths.**
+
