@@ -107,3 +107,36 @@ Users = 56 GB ÷ 1 GB = 56 users
 
 **Check:** every user at 16,000 tokens? → 2 GB each, 56 ÷ 2 = **28 users**
 
+## Step 4: Bytes read for each token (speed)
+
+In every decode step, the GPU reads:
+
+1. **The weights**: once, **shared** by all users in the batch.
+2. **Each user's KV cache**: **separate** for every user.
+
+```
+Bytes read per step = weights + (KV per user × users)
+Time per step       = bytes read ÷ memory speed (2,000 GB/s)
+```
+
+📖 **Story:** the textbook (weights) is shared, but each student also has **their own notebook** (KV cache) that must be read too.
+
+**Llama 3 8B, each user at 8,000 tokens (1 GB KV):**
+
+```
+1 user:    16 + 1      = 17 GB → 17 ÷ 2,000 = 8.5 ms per step
+56 users:  16 + 56 × 1 = 72 GB → 72 ÷ 2,000 = 36 ms per step
+```
+
+| | 1 user | 56 users |
+|---|---|---|
+| Time per step | 8.5 ms | 36 ms |
+| Speed for **each** user | ~118 tokens/sec | ~28 tokens/sec |
+| Speed for the **whole GPU** | ~118 tokens/sec | **~1,550 tokens/sec** 🚀 |
+
+👉 Batching makes the GPU **13× more productive**, but each user gets a bit slower.
+
+**Surprise:** with 56 users, the reads are 16 GB of weights (22%) and **56 GB of KV caches (78%)**. At long chats, reading the KV cache is the main cost, which is why FP8 KV and GQA matter so much.
+
+**Check:** 10 users at 8,000 tokens? → 16 + 10 = 26 GB → **13 ms** per step
+
