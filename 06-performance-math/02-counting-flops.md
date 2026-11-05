@@ -147,3 +147,54 @@ This is how long the user waits for the **first word**: **TTFT** (Time To First 
 
 **Check:** a 4,000-token prompt? → 64 TFLOPs, **64 ms** ideal
 
+## Step 5: MFU (how busy is the GPU?)
+
+**MFU** = the share of time the GPU is actually doing maths instead of waiting.
+
+```
+MFU = maths time ÷ total time   (= actual FLOPS ÷ peak FLOPS)
+```
+
+**Student story:** reading takes 480 s, and each answer takes 1 s of thinking.
+
+```
+1 student:    1 ÷ 480  = 0.2%   😴
+64 students:  64 ÷ 480 = 13%    🙂
+```
+
+**Llama 3 8B on a GPU:**
+
+| Case | Maths time | Total time | MFU |
+|---|---|---|---|
+| Decode, 1 user | 0.016 ms | ~8 ms | **0.2%** |
+| Decode, 64 users | 1 ms | ~8 ms | **13%** |
+| Prefill, 2,000 tokens | 32 ms | ~60 ms | **~50%** |
+
+👉 **More users together = less waiting = higher MFU = cheaper per user.**
+
+## Remember
+
+| Step | Remember |
+|---|---|
+| 1 | 1 weight = **2 FLOPs** |
+| 2 | FLOPs = **2 × weights × tokens** |
+| 3 | Time = FLOPs ÷ GPU speed. Decode actually waits on **memory** |
+| 4 | Prefill sets **TTFT**, and the maths really is the limit |
+| 5 | **MFU** = maths time ÷ total time. Batching raises it |
+
+## Quick check
+
+1. FLOPs per token for a 13B model?
+2. Prefill FLOPs for a 1,000-token prompt on a 70B model, and the ideal time at 1,000 TFLOPS?
+3. Why is decode for 1 user much slower than the FLOPs say?
+4. Reading takes 480 s, each answer 1 s, 120 students at once. MFU?
+
+<details>
+<summary>Answers</summary>
+
+1. 2 × 13B = **26 GFLOPs**
+2. 2 × 70B × 1,000 = **140 TFLOPs** → **140 ms**
+3. Every token must **read all the weights from memory**, and that reading is much slower than the maths.
+4. 120 ÷ 480 = **25%**
+
+</details>
