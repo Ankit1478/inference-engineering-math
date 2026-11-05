@@ -122,3 +122,28 @@ Reading takes **500× longer** than the maths. This is called **memory-bound** (
 
 **Check:** a 70B model in BF16 = 140 GB. One decode token at 2,000 GB/s? → 140 ÷ 2,000 = **70 ms** (~14 tokens/sec)
 
+## Step 4: Prefill (reading the whole prompt)
+
+Before writing, the model reads the **whole prompt at once**. This is called **prefill**. Same formula, using the **prompt** tokens:
+
+Llama 3 8B, a **2,000-token** prompt:
+
+```
+FLOPs = 2 × 8B × 2,000 = 32 TFLOPs
+Time  = 32 ÷ 1,000 = 0.032 s = 32 ms
+```
+
+This is how long the user waits for the **first word**: **TTFT** (Time To First Token).
+
+| Prompt | FLOPs | Ideal TTFT |
+|---|---|---|
+| 500 tokens | 8 TFLOPs | 8 ms |
+| 2,000 tokens | 32 TFLOPs | 32 ms |
+| 10,000 tokens | 160 TFLOPs | 160 ms |
+
+**Why the formula works here:** all 2,000 tokens use each weight **together**. One read of the book, 2,000 answers, so the GPU stays busy. Real TTFT is about **2× the ideal** (~60 ms).
+
+**Long prompts:** attention adds `2 × n² × hidden × layers` (n = prompt tokens). At 2,000 tokens it's only ~3% extra, but at 32K tokens it's **~53%** extra (O(n²), 6.1).
+
+**Check:** a 4,000-token prompt? → 64 TFLOPs, **64 ms** ideal
+
