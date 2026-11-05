@@ -37,3 +37,39 @@ Weights memory = number of weights × bytes per weight
 
 **Check:** a 13B model in BF16 on a 24 GB GPU? → 26 GB, **doesn't fit** (FP8 = 13 GB fits)
 
+## Step 2: Memory for the KV cache (one user)
+
+While writing, the model **saves K and V for every token**. These saved notes take memory too.
+
+### A. Memory for 1 token
+
+```
+KV per token = 2 × layers × KV heads × head size × bytes
+```
+
+| Piece | Llama 3 8B | Why |
+|---|---|---|
+| 2 | 2 | one K **and** one V |
+| layers | 32 | each layer saves its own |
+| KV heads | 8 | GQA (5.3) |
+| head size | 128 | numbers per head |
+| bytes | 2 | BF16 |
+
+```
+2 × 32 × 8 × 128 × 2 = 131,072 bytes ≈ 128 KB per token
+```
+
+### B. Memory for 1 user
+
+```
+KV per user = KV per token × tokens in the chat
+```
+
+| Chat length | KV cache |
+|---|---|
+| 1,000 tokens | ≈ **128 MB** |
+| 8,000 tokens | ≈ **1 GB** |
+| 128,000 tokens | ≈ **16 GB** 😱 as big as the whole model |
+
+**Check:** a 4,000-token chat? → 128 KB × 4,000 ≈ **0.5 GB**
+
