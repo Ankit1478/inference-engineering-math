@@ -75,3 +75,50 @@ FLOPs = 2 × weights × tokens
 
 **Check:** 100 tokens on Llama 3 8B? → 2 × 8B × 100 = **1.6 TFLOPs**
 
+## Step 3: How long does it take on a GPU?
+
+Like a car trip, `time = distance ÷ speed`:
+
+```
+Time = FLOPs ÷ GPU speed (FLOPS)
+```
+
+**FLOPs** = the amount of maths. **FLOPS** (capital S) = maths **per second**. An H100 does about **1,000 TFLOPS** (rounded).
+
+Llama 3 8B, 1 token:
+
+```
+0.016 TFLOPs ÷ 1,000 TFLOPS = 0.000016 s = 0.016 ms ⚡
+```
+
+That would mean **~62,000 tokens per second**. Real speed for one user is only **~125**. Why?
+
+### The missing part: reading the weights 📖
+
+**Story:** a student must **re-read the whole textbook** before answering each question.
+
+| Job | Time |
+|---|---|
+| Re-read the book | 8 minutes |
+| Think and write | 1 second |
+
+One answer ≈ **8 minutes**. Fast thinking doesn't help, because **reading** takes all the time.
+
+**The GPU is the same:**
+
+| Story | GPU (Llama 3 8B) |
+|---|---|
+| Textbook | weights = 8B × 2 bytes = **16 GB** |
+| Re-read the book | read 16 GB from memory at ~2,000 GB/s = **8 ms** |
+| Think and write | the maths = **0.016 ms** |
+
+```
+1 token ≈ 8 ms  →  1,000 ÷ 8 ≈ 125 tokens per second
+```
+
+Reading takes **500× longer** than the maths. This is called **memory-bound** (more in 6.4).
+
+**The fix: batching 👥.** 10 students ask at once, so you read the book **once** and answer all 10. The server reads the weights once and serves many users.
+
+**Check:** a 70B model in BF16 = 140 GB. One decode token at 2,000 GB/s? → 140 ÷ 2,000 = **70 ms** (~14 tokens/sec)
+
