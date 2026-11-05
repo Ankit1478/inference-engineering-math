@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 32 done, 5 left, 37 total**
+**Progress: 33 done, 4 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -99,11 +99,11 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Feed-forward layers and MoE](05-transformer-math/04-feed-forward-layers.md) (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
-## Section 6: Performance math ⭐ (2/7)
+## Section 6: Performance math ⭐ (3/7)
 
 - ✅ [Big-O](06-performance-math/01-big-o.md)
 - ✅ [Counting FLOPs](06-performance-math/02-counting-flops.md) ⭐
-- ⬜ Counting memory in bytes ⭐ (mostly done)
+- ✅ [Counting memory in bytes](06-performance-math/03-counting-memory-bytes.md) ⭐
 - ⬜ Memory bandwidth vs compute speed
 - ⬜ Arithmetic intensity and the roofline model ⭐
 - ⬜ Latency vs throughput ⭐
@@ -154,6 +154,10 @@ Big-O (n = tokens):  decode attention O(n), prefill attention O(n²), FFN O(1), 
 Prefill FLOPs:       2 × parameters × prompt tokens  (+ 2 × n² × hidden × layers for attention)
 Decode FLOPs/step:   2 × parameters × batch size
 Time (compute):      FLOPs ÷ (GPU FLOPS × MFU)
+Users per GPU:       (GPU memory − weights − extra) ÷ KV per user
+Bytes read per step: weights + KV per user × users
+Time (memory):       bytes read ÷ memory speed
+GPUs needed:         total memory ÷ one GPU's memory, rounded up
 ```
 
 ## After the math

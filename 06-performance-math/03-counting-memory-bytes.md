@@ -199,3 +199,31 @@ Weights 140 + KV 125 + extra ~27 = ~292 GB
 
 👉 Quantization can **halve the number of GPUs**, which halves the cost.
 
+## Remember
+
+| Step | Remember |
+|---|---|
+| 1 | Weights = **weights × bytes** (8B in BF16 = 16 GB) |
+| 2 | KV per token = **2 × layers × KV heads × head size × bytes** (8B: 128 KB, 70B: 320 KB) |
+| 3 | Users = **(GPU − weights − extra) ÷ KV per user** |
+| 4 | Read per step = **weights + all users' KV**. Time = bytes ÷ 2,000 GB/s |
+| 5 | GPUs = **total ÷ one GPU's memory**, rounded up |
+
+## Quick check
+
+1. A 13B model in FP8: weights memory?
+2. Llama 3 8B, one user at 32,000 tokens: KV cache size?
+3. Llama 3 8B on an H100, every user at 4,000 tokens (0.5 GB each): how many users fit?
+4. Llama 3 8B, 20 users at 8,000 tokens: bytes read per step and time per step?
+5. You need 150 GB in total. How many H100s?
+
+<details>
+<summary>Answers</summary>
+
+1. 13B × 1 = **13 GB**
+2. 128 KB × 32,000 ≈ **4 GB**
+3. 56 ÷ 0.5 = **112 users**
+4. 16 + 20 = **36 GB** → 36 ÷ 2,000 = **18 ms**
+5. 150 ÷ 80 = 1.9 → **2 H100s**
+
+</details>
