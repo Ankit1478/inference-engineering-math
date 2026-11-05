@@ -140,3 +140,62 @@ Time per step       = bytes read ÷ memory speed (2,000 GB/s)
 
 **Check:** 10 users at 8,000 tokens? → 16 + 10 = 26 GB → **13 ms** per step
 
+## Step 5: A big model needs several GPUs
+
+**Llama 3 70B, serving 50 users at 8,000 tokens each.**
+
+### A. Weights
+
+```
+70B × 2 bytes (BF16) = 140 GB   → doesn't fit on one 80 GB H100 ❌
+```
+
+### B. KV cache (same formula as Step 2)
+
+| Piece | Llama 3 70B |
+|---|---|
+| 2 | 2 |
+| layers | **80** |
+| KV heads | 8 |
+| head size | 128 |
+| bytes | 2 |
+
+```
+2 × 80 × 8 × 128 × 2 = 327,680 bytes ≈ 320 KB per token
+Per user (8,000 tokens): ≈ 2.5 GB
+50 users: 125 GB
+```
+
+### C. Add it up
+
+```
+Weights 140 + KV 125 + extra ~27 = ~292 GB
+```
+
+### D. How many GPUs?
+
+**Divide by the memory of ONE GPU, then round up.** It's like packing 292 kg of rice into 80 kg bags:
+
+```
+292 kg ÷ 80 kg = 3.65 bags → you can't buy 0.65 of a bag → 4 bags
+292 GB ÷ 80 GB = 3.65      → 4 H100s
+```
+
+| GPU | Memory each | GPUs for 292 GB |
+|---|---|---|
+| A100 40 GB | 40 GB | 7.3 → **8** |
+| H100 | 80 GB | 3.65 → **4** |
+| H200 | 141 GB | 2.07 → **3** (usually 4) |
+
+(Models are usually split across **2, 4 or 8** GPUs.)
+
+### E. Using our tricks
+
+| Setup | Weights | KV (50 users) | Total | H100s |
+|---|---|---|---|---|
+| All BF16 | 140 GB | 125 GB | ~292 GB | **4** |
+| FP8 weights | 70 GB | 125 GB | ~215 GB | **4** (3 isn't a usual split) |
+| FP8 weights + FP8 KV | 70 GB | 62 GB | ~145 GB | **2** 🎉 |
+
+👉 Quantization can **halve the number of GPUs**, which halves the cost.
+
