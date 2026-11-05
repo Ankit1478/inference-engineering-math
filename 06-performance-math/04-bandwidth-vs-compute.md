@@ -32,3 +32,13 @@ Maths ÷ reading = 1,000 ÷ 2 = 500
 
 (The real H100 is ~3,350 GB/s and ~990 TFLOPS, a ratio of ~300. We use round numbers.)
 
+## Step 2: Two times. The bigger one wins
+
+```
+Memory time = bytes ÷ 2,000 GB/s
+Maths time  = FLOPs ÷ 1,000 TFLOPS
+Real time   ≈ the BIGGER of the two
+```
+
+🍕 **Pizza order:** if the dough takes 8 minutes to arrive and baking takes 1 second, you wait **8 minutes**. A faster oven doesn't help.
+
