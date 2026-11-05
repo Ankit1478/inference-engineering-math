@@ -77,3 +77,38 @@ Maths time:   users × 0.016 ms
 
 The same rule works for prefill: a prompt **over ~500 tokens** is compute-bound. Under that, it's memory-bound.
 
+## Step 5: Which fix for which problem
+
+| Problem | Meaning | Fixes |
+|---|---|---|
+| 🚚 **Memory-bound** (decode) | too many bytes to read | Fewer bytes: **FP8/INT4 weights**, **FP8 KV**, GQA. More reuse: **batching** |
+| 👨‍🍳 **Compute-bound** (prefill) | too much maths | Faster maths: **FP8 (W8A8)** on Tensor Cores. Less maths: **prefix caching**. More GPUs |
+
+**Trap:** W4A16 (INT4 weights, BF16 maths) speeds up **decode** (fewer bytes) but **not prefill** (same maths). See 2.7.
+
+## Remember
+
+- 2 speeds: **bandwidth** (reading) and **compute** (maths). H100 ratio ≈ **500**.
+- Real time ≈ the **bigger** of memory time and maths time.
+- **Decode = memory-bound. Prefill = compute-bound.**
+- The switch is at **~500 tokens or users** per weight read.
+- Memory-bound → **fewer bytes**. Compute-bound → **less or faster maths**.
+
+## Quick check
+
+1. A GPU reads 1,000 GB/s and does 500 TFLOPS. Its ratio?
+2. Llama 3 8B, prefill of a 100-token prompt: memory time, maths time, which limit?
+3. Same model, prefill of 4,000 tokens: which limit?
+4. Decode is slow. Will a GPU with **faster maths but the same memory speed** help?
+5. Will W4A16 make prefill faster?
+
+<details>
+<summary>Answers</summary>
+
+1. 500 trillion ÷ 1 trillion = **500**
+2. Memory 8 ms, maths 1.6 ms → **memory-bound** (under 500 tokens)
+3. Maths 64 ms vs memory 8 ms → **compute-bound**
+4. **No.** Decode waits for memory, so a faster oven doesn't help.
+5. **No.** The maths still runs in BF16.
+
+</details>
