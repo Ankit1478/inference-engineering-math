@@ -73,3 +73,37 @@ KV per user = KV per token × tokens in the chat
 
 **Check:** a 4,000-token chat? → 128 KB × 4,000 ≈ **0.5 GB**
 
+## Step 3: How many users fit on one GPU?
+
+GPU memory is a **suitcase** 🧳:
+
+```
+GPU memory = weights + KV cache (all users) + extra (~10% working space)
+```
+
+**Llama 3 8B on an H100 (80 GB), each user at 8,000 tokens:**
+
+```
+Suitcase:          80 GB
+− Weights (BF16):  16 GB
+− Extra (~10%):     8 GB
+= Left for KV:     56 GB
+
+Users = 56 GB ÷ 1 GB = 56 users
+```
+
+| Chat length | KV per user | Users that fit |
+|---|---|---|
+| 2,000 tokens | 0.25 GB | **224** |
+| 8,000 tokens | 1 GB | **56** |
+| 32,000 tokens | 4 GB | **14** |
+
+👉 Longer chats = fewer users per GPU = more expensive per user.
+
+| Trick | Effect at 8K tokens |
+|---|---|
+| FP8 KV cache (0.5 GB per user) | 56 → **112 users** |
+| FP8 weights (room for KV → 64 GB) | 56 → **64 users** |
+
+**Check:** every user at 16,000 tokens? → 2 GB each, 56 ÷ 2 = **28 users**
+
