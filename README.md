@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 30 done, 7 left, 37 total**
+**Progress: 32 done, 5 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -99,10 +99,10 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Feed-forward layers and MoE](05-transformer-math/04-feed-forward-layers.md) (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
-## Section 6: Performance math ⭐ (0/7)
+## Section 6: Performance math ⭐ (2/7)
 
-- ⬜ Big-O
-- ⬜ Counting FLOPs ⭐ (mostly done)
+- ✅ [Big-O](06-performance-math/01-big-o.md)
+- ✅ [Counting FLOPs](06-performance-math/02-counting-flops.md) ⭐
 - ⬜ Counting memory in bytes ⭐ (mostly done)
 - ⬜ Memory bandwidth vs compute speed
 - ⬜ Arithmetic intensity and the roofline model ⭐
@@ -150,6 +150,10 @@ Decode attn FLOPs:   4 × context length × hidden, per layer
 Heads:               hidden ÷ head size  (4,096 ÷ 128 = 32)
 FFN params (SwiGLU): 3 × hidden × FFN size, per layer
 MoE:                 memory = all parameters, compute = active parameters
+Big-O (n = tokens):  decode attention O(n), prefill attention O(n²), FFN O(1), KV cache O(n)
+Prefill FLOPs:       2 × parameters × prompt tokens  (+ 2 × n² × hidden × layers for attention)
+Decode FLOPs/step:   2 × parameters × batch size
+Time (compute):      FLOPs ÷ (GPU FLOPS × MFU)
 ```
 
 ## After the math
