@@ -100,6 +100,29 @@ The line **goes up, then goes flat**, like a roof. That's the **roofline**. 🏠
 
 The **500** is the same ratio as in 6.4 (GPU FLOPS ÷ bandwidth).
 
+### Many users: the slower job decides the time
+
+- **Reading time stays 8 ms**, because the weights are read **once** and shared by all users.
+- **Maths time grows**, because each user needs their own maths: `maths time = users × 0.016 ms`.
+- **Real time = the bigger of the two**, like waiting for the last friend before leaving.
+
+| Users | Reading time | Maths time | **Real time** | Slow part |
+|---|---|---|---|---|
+| 1 | 8 ms | 0.016 ms | **8 ms** | 🚚 reading |
+| 64 | 8 ms | 1 ms | **8 ms** | 🚚 reading |
+| 250 | 8 ms | 4 ms | **8 ms** | 🚚 reading |
+| **500** | 8 ms | **8 ms** | **8 ms** | equal ⚖️ |
+| 1,000 | 8 ms | 16 ms | **16 ms** | 👨‍🍳 maths |
+
+- **Up to 500 users:** the time stays 8 ms, so extra users are **free**. 🎉
+- **After 500:** the maths takes longer, so time goes up. No more free users.
+
+The switch point is where both times are **equal**:
+
+```
+users × 0.016 = 8   →   users = 8 ÷ 0.016 = 500
+```
+
 ### Fill the seats
 
 | Users | GPU busy | Words per second (125 trips/s × users) | What's slow |
