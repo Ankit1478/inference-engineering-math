@@ -81,3 +81,48 @@ At the chai stall: if 2 customers arrive every minute and each stays 5 minutes, 
 - An H100 has about 56 GB free for KV, so it fits easily ✅
 
 (Step 1 was Little's Law the other way round: 64 seats ÷ 1.6 s = 40 req/s.)
+
+## Step 5: How many GPUs do I need? 🖥️
+
+**Target:** 50 requests per second.
+
+- **1 GPU:** 50 ÷ 40 = 125% busy 💥 The line grows forever.
+- **Don't plan for 100%.** Plan for about **75% busy** so random bursts don't explode the wait.
+  - At 75%, each GPU handles 40 × 0.75 = **30 req/s**
+
+```
+GPUs = arrival rate ÷ (one GPU's capacity × target busy), rounded up
+     = 50 ÷ (40 × 0.75) = 1.67 → 2 GPUs
+```
+
+**Check with 2 GPUs:**
+
+- Each GPU gets 25 req/s, so it's 62.5% busy
+- Wait in line = 0.625 ÷ 0.375 × 25 ≈ **42 ms** ✅ Inside the SLO.
+
+**Why real companies run at about 70–80%, not 100%:** the spare 20–30% soaks up traffic spikes. Running at 100% looks efficient on paper, but users would wait seconds.
+
+## Remember
+
+1. **Busy = arrivals ÷ capacity.** At 100% or more, the line grows forever.
+2. **Wait ≈ busy ÷ (1 − busy).** It's small until about 80% busy, then it explodes.
+3. **Little's Law: users inside = arrival rate × time stayed.** Use it to size the batch and the KV-cache memory.
+4. **GPUs = arrivals ÷ (capacity × ~0.75)**, rounded up.
+5. Queue wait adds to **TTFT**.
+
+## Quick check
+
+1. A GPU can finish 40 req/s and 44 req/s arrive. What happens?
+2. 20 req/s arrive and each stays 2 s. How many users are inside?
+3. Going from 80% to 90% busy, how much longer is the wait?
+4. 100 req/s arrive, one GPU does 40 req/s, and you target 75% busy. How many GPUs?
+
+<details>
+<summary>Answers</summary>
+
+1. **110% busy**, so the line grows by **4 every second, forever**.
+2. 20 × 2 = **40 users**.
+3. From 4× to 9×, so about **2.25× longer**.
+4. 100 ÷ 30 = 3.3, so **4 GPUs**.
+
+</details>

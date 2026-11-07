@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 36 done, 1 left, 37 total**
+**Progress: 37 done, 0 left, 37 total** 🎉
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -99,7 +99,7 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Feed-forward layers and MoE](05-transformer-math/04-feed-forward-layers.md) (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
-## Section 6: Performance math ⭐ (6/7)
+## Section 6: Performance math ⭐ ✅ (7/7)
 
 - ✅ [Big-O](06-performance-math/01-big-o.md)
 - ✅ [Counting FLOPs](06-performance-math/02-counting-flops.md) ⭐
@@ -107,7 +107,7 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Memory bandwidth vs compute speed](06-performance-math/04-bandwidth-vs-compute.md)
 - ✅ [Arithmetic intensity and the roofline model ⭐](06-performance-math/05-roofline.md)
 - ✅ [Latency vs throughput ⭐](06-performance-math/06-latency-vs-throughput.md)
-- ⬜ Basic queuing math
+- ✅ [Basic queuing math](06-performance-math/07-queuing.md)
 
 ## Key formulas so far
 
@@ -156,6 +156,15 @@ Time (memory):       bytes read ÷ memory speed
 GPUs needed:         total memory ÷ one GPU's memory, rounded up
 GPU ratio:           GPU FLOPS ÷ bandwidth  (H100 ≈ 500 FLOPs per byte)
 Real time:           the bigger of memory time and maths time
+Intensity:           FLOPs ÷ bytes  (≈ tokens sharing one weight read)
+Switch point:        maths speed ÷ memory speed  (H100 ≈ 500)
+Latency:             TTFT + words × TPOT
+Throughput:          words per step × steps per second
+Goodput:             throughput delivered within the SLO
+Busy (utilization):  arrival rate ÷ service rate  (must stay < 100%)
+Wait in line:        ≈ busy ÷ (1 − busy) × time per seat
+Little's Law:        users inside = arrival rate × time each stays
+GPUs needed (load):  arrivals ÷ (one GPU's capacity × ~0.75), rounded up
 ```
 
 ## After the math
