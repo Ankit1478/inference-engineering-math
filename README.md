@@ -109,10 +109,6 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Latency vs throughput ⭐](06-performance-math/06-latency-vs-throughput.md)
 - ⬜ Basic queuing math
 
-## Section 7: Calculus (skipped)
-
-Only needed for training, not inference.
-
 ## Key formulas so far
 
 ```
