@@ -8,6 +8,7 @@
 | 2 | **The speed limit**: fill the bus (500 seats) |
 | 3 | **Prefill vs decode**: where real jobs sit on the roof |
 | 4 | **Fixing decode**: batching and smaller weights |
+| 5 | **Fixing prefill**, and the KV cache that batching can't fix |
 
 ## Step 1: How many answers per read? 📖
 
@@ -241,3 +242,61 @@ BF16 is the **normal** size. FP8 and INT4 are smaller, at a small accuracy cost.
 👉 **Decode is slow because of reading. Batching = fewer reads per word. Smaller weights = faster reads. Use both.**
 
 **Check:** 1 user, INT4 weights. Words per second? → 4 ÷ 2,000 = 2 ms per word → **500 words/s**
+
+## Step 5: Fixing prefill, and the KV cache ⚠️
+
+### Why each job is slow
+
+> **Prefill** is slow because of **too much maths**: many tokens share **one** read, but each token needs its own maths.
+>
+> **Decode** is slow because of **reading**: every word reads all the weights again, and the maths is tiny.
+
+```
+Prefill (2,000 tokens):  reading 8 ms  |  maths 32 ms     ← maths is slow
+Decode  (1 word):        reading 8 ms  |  maths 0.016 ms  ← reading is slow
+```
+
+### Fixing prefill: faster maths 👨‍🍳
+
+| Fix | What it does | 2,000-token prompt |
+|---|---|---|
+| **FP8 maths** | the H100 does FP8 maths **2× faster** (~2,000 TFLOPS) | 32 ms → **16 ms** |
+| **More GPUs** | split the maths across GPUs | 2 GPUs → ~16 ms |
+| **Prefix caching** | the same prompt start (like a system prompt) is computed **once** and reused | less maths |
+
+This raises the **flat roof** and makes the first word appear sooner (**TTFT**). It doesn't help decode, because the maths was never decode's problem.
+
+### The KV cache: what batching can't fix
+
+- **KV cache** = the saved memory of the chat so far, a small note for every past token. **Each user has their own.**
+- Llama 3 8B: **~0.13 MB per token** → 1K tokens = 0.13 GB, 8K = 1 GB, 32K = 4 GB per user.
+- For **every new word**, the GPU reads:
+  1. **Weights** (16 GB): **shared**, read once for all users ✅
+  2. **Each user's KV cache**: **not shared**, read separately for each user ❌
+- **Story:** the weights are the shared **textbook**. The KV cache is each student's **own notebook**. Batching saves the textbook reading, but every notebook must still be read.
+
+```
+64 users × 8K-token chats, one decode step:
+Weights:  16 GB (read once, shared)
+KV cache: 64 × 1 GB = 64 GB (each read separately)
+Total:    80 GB  → the KV cache is 4× the weights
+```
+
+More users = **more** KV cache to read. The KV cache reads stay at ~1 FLOP per byte, so they're always on the slope.
+
+| Fix (thinner notebooks) | Effect |
+|---|---|
+| **FP8 KV cache** | 2× smaller |
+| **GQA** (already in Llama 3) | 4× smaller |
+| **Shorter context** | fewer pages |
+
+### The whole roofline in one rule 🏠
+
+| Slow part | Where | Fix |
+|---|---|---|
+| 🚚 **Reading** (memory) | decode, short prompts, long KV cache | batching, smaller weights, smaller KV cache |
+| 👨‍🍳 **Maths** | long prompts (prefill) | faster maths (FP8), more GPUs, prefix caching |
+
+👉 **First find the slow part (reading or maths), then fix that part.**
+
+**Check:** very long chats (32K tokens), and decode is slow even with batching. Why? → each user's KV cache (**4 GB**) is read for every word and isn't shared. Fix: FP8 KV cache or shorter context.
