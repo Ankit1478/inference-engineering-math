@@ -122,3 +122,69 @@ Each user's **KV cache** (6.5 Step 5) adds reading time, so the step time grows 
 👉 **The engineer's job: pick the batch size that gives the most throughput while keeping latency "good enough".**
 
 **Check:** ideal case, 1,500 users. Step time? Each user? → maths 24 ms > 8 ms, so **24 ms**, and 1,000 ÷ 24 ≈ **42 words/s**
+
+## Step 4: SLO and goodput 🎯
+
+**SLO (Service Level Objective) = the latency promise to users.** For example:
+
+| Promise | Meaning |
+|---|---|
+| **TTFT < 500 ms** | the first word appears within half a second |
+| **TPOT < 50 ms** | each word within 50 ms (at least 20 words/s) |
+
+**Story 🍕:** "30-minute delivery or it's free!" is the shop's SLO. Using it, the shop decides how many orders it can take at once.
+
+**The SLO is only the target. We calculate the max users from it:**
+
+```
+SLO (target) → check the step time → find the max users
+TPOT < 50 ms → 256 users = 41 ms ✅, 512 users = 75 ms ❌ → max ≈ 256 users
+```
+
+| Users | TPOT | SLO pass? | Throughput |
+|---|---|---|---|
+| 1 | 8 ms | ✅ | 123 |
+| 64 | 16 ms | ✅ | 3,900 |
+| 256 | 41 ms | ✅ | **6,200** ← best |
+| 512 | ~75 ms | ❌ | 6,800 (users unhappy 😠) |
+
+### Goodput 💡
+
+**Goodput = only the throughput that meets the SLO.** At 512 users, throughput is 6,800 but the SLO fails, so **goodput ≈ 0**. The real target is **goodput**, not plain throughput.
+
+### Prefill gets in the way ⚠️
+
+When a new user sends a long prompt, its prefill (~32 ms) holds the GPU, and everyone else's next word **pauses** (a TPOT spike 📈).
+
+| Fix | What it does |
+|---|---|
+| **Chunked prefill** | split the long prompt into small chunks, and each step does a bit of prefill plus everyone's decode |
+| **Disaggregation** | prefill on some GPUs and decode on others, so they don't disturb each other |
+
+## Remember
+
+| Step | Remember |
+|---|---|
+| 1 | **Latency** = one user's wait = **TTFT + words × TPOT** |
+| 2 | **Throughput** = total words/s for everyone = **words per step × steps per second** |
+| 3 | Bigger batch: throughput ⬆️, but after a point (earlier with KV cache) every user gets slower |
+| 4 | **SLO** = the latency promise. Pick the **max batch that meets it** → maximize **goodput** |
+
+## Quick check
+
+1. TTFT 100 ms, TPOT 20 ms, 50-word reply. Total latency?
+2. 40 users, 8 ms steps. Throughput? Each user's speed?
+3. Why doesn't throughput grow past ~500 users in the ideal case?
+4. SLO: TPOT < 20 ms. Using the real table, max users?
+5. What's the difference between throughput and goodput?
+
+<details>
+<summary>Answers</summary>
+
+1. 100 + 50 × 20 = **1,100 ms**
+2. 40 × 125 = **5,000 words/s**. Each user still gets **125 words/s**.
+3. Past 500, the **maths** becomes the slow part, so the step time grows as fast as the users do.
+4. **64 users** (16 ms ✅). 256 users is 41 ms ❌.
+5. Throughput counts all words. **Goodput** counts only words delivered **within the SLO**.
+
+</details>

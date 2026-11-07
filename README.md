@@ -6,7 +6,7 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 ✅ = done, 🟡 = in progress, ⬜ = to do, ⭐ = very important
 
-**Progress: 35 done, 2 left, 37 total**
+**Progress: 36 done, 1 left, 37 total**
 
 ## Section 1: Linear Algebra ✅ (9/9)
 
@@ -99,14 +99,14 @@ I already know transformers, so these are revision notes from the inference side
 - ✅ [Feed-forward layers and MoE](05-transformer-math/04-feed-forward-layers.md) (SwiGLU in 3.3)
 - ✅ KV cache and its size formula ⭐ (see the KV Cache deep dive above)
 
-## Section 6: Performance math ⭐ (5/7)
+## Section 6: Performance math ⭐ (6/7)
 
 - ✅ [Big-O](06-performance-math/01-big-o.md)
 - ✅ [Counting FLOPs](06-performance-math/02-counting-flops.md) ⭐
 - ✅ [Counting memory in bytes](06-performance-math/03-counting-memory-bytes.md) ⭐
 - ✅ [Memory bandwidth vs compute speed](06-performance-math/04-bandwidth-vs-compute.md)
 - ✅ [Arithmetic intensity and the roofline model ⭐](06-performance-math/05-roofline.md)
-- ⬜ Latency vs throughput ⭐
+- ✅ [Latency vs throughput ⭐](06-performance-math/06-latency-vs-throughput.md)
 - ⬜ Basic queuing math
 
 ## Section 7: Calculus (skipped)
