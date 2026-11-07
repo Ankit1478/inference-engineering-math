@@ -61,3 +61,81 @@ Every user's next word needs the **same** weights. So the GPU reads 16 GB **once
 The maths unit is idle **99.8%** of the time. An expensive GPU waits on memory. **The fix: more answers per read.**
 
 **Check:** 200 users at once. Intensity? → **~200** (one read gives 200 words)
+
+## Step 2: The speed limit 🚌
+
+### The bus story
+
+- A bus trip **always takes 8 minutes**, empty or full.
+- The bus has **500 seats**.
+
+| People waiting | People moved per trip |
+|---|---|
+| 1 | **1** (499 seats empty 😴) |
+| 100 | **100** |
+| 500 | **500** (full ✅) |
+| 1,000 | still **500** (the rest wait) |
+
+The line **goes up, then goes flat**, like a roof. That's the **roofline**. 🏠
+
+| Bus | GPU |
+|---|---|
+| A trip (8 minutes) | Reading the weights (8 ms) |
+| Seats (500) | Words whose maths fits in one read |
+| People | Users (each wants 1 word) |
+
+### The maths: `time = distance ÷ speed`, used twice
+
+| | "Distance" (work) | Speed | Time |
+|---|---|---|---|
+| 🚚 Reading | 16 GB of weights | 2,000 GB/s | **8 ms** |
+| 👨‍🍳 Maths (1 word) | 2 × 8B = 16 billion steps | 1,000 trillion/s (1,000 TFLOPS) | **0.016 ms** |
+
+```
+1. Trip time   = weights ÷ memory speed        = 16 ÷ 2,000      = 8 ms
+2. Word maths  = (2 × weights) ÷ maths speed   = 16 G ÷ 1,000 T  = 0.016 ms
+3. Seats       = trip time ÷ word maths        = 8 ÷ 0.016       = 500
+4. GPU busy    = users ÷ seats
+```
+
+The **500** is the same ratio as in 6.4 (GPU FLOPS ÷ bandwidth).
+
+### Fill the seats
+
+| Users | GPU busy | Words per second (125 trips/s × users) | What's slow |
+|---|---|---|---|
+| 1 | **0.2%** | 125 | 🚚 memory |
+| 64 | **13%** | 8,000 | 🚚 memory |
+| 250 | **50%** | 31,250 | 🚚 memory |
+| **500** | **100%** | **62,500** | balanced ⚖️ |
+| 1,000 | 100% | 62,500 (no more!) | 👨‍🍳 maths |
+
+```
+words/sec
+62,500 |            _______________  ← flat roof (maths limit)
+       |          /
+       |        /
+       |      /    ← slope (memory limit)
+       |    /
+       |  /
+       |/________________________ users per read
+                  500
+```
+
+### The same thing in TFLOPS (how engineers write it)
+
+```
+Speed = the smaller of:  2 × intensity   (memory: 2,000 GB/s × intensity)
+                         1,000           (maths: the GPU's max)
+```
+
+| Intensity | Memory limit | Maths limit | Real speed |
+|---|---|---|---|
+| 1 | 2 | 1,000 | **2 TFLOPS** |
+| 64 | 128 | 1,000 | **128 TFLOPS** |
+| 500 | 1,000 | 1,000 | **1,000 TFLOPS** |
+| 2,000 | 4,000 | 1,000 | **1,000 TFLOPS** |
+
+👉 **Below 500: the slope, memory is the limit, so add users. Above 500: the flat roof, maths is the limit.**
+
+**Check:** 100 users. GPU busy? What's slow? → 100 ÷ 500 = **20%**, memory (the slope)
