@@ -7,6 +7,7 @@
 | 1 | **Answers per read** (arithmetic intensity) |
 | 2 | **The speed limit**: fill the bus (500 seats) |
 | 3 | **Prefill vs decode**: where real jobs sit on the roof |
+| 4 | **Fixing decode**: batching and smaller weights |
 
 ## Step 1: How many answers per read? 📖
 
@@ -201,3 +202,42 @@ It gives **chances**, not one exact answer. That's why the same question can get
 👉 **Prefill = few reads, lots of maths (maths-bound, GPU busy). Decode = one read per word, little maths (memory-bound, GPU waits).** A short prompt (under ~500 tokens) still behaves like decode.
 
 **Check:** decode with 300 users. Memory or maths? → 300 < 500, so **memory** (reading 8 ms vs maths 4.8 ms)
+
+## Step 4: Fixing decode (batching and smaller weights) 🔧
+
+Decode is slow because **reading** is slow. Bus story: the trip (reading) takes 8 ms, and often only 1 person rides. So either **fill the bus** or **shorten the trip**.
+
+### Fix 1: Batching 👥 (fill the bus)
+
+> For each new word, the GPU has to load **all the model's weights** (16 GB) from memory. If 10 users are served **one by one**, the same weights are loaded **10 times** (160 GB), which wastes **time**, because reading memory is the slow part. With **batching**, the GPU loads the weights **once**, multiplies them with **all 10 users' inputs together**, and predicts the **next word for each user**. So for one step, there's **1 load instead of 10**, which is about **10× less reading**. The maths stays the same (each user still needs their own), but the maths is fast, so the whole step becomes much faster.
+
+| Work (10 users, 1 word each) | One by one | Batched |
+|---|---|---|
+| Reading weights | 160 GB, 80 ms | **16 GB, 8 ms** ✅ |
+| Maths | 10 × 16 GFLOPs | 10 × 16 GFLOPs (same) |
+
+**How do different questions work in one go?** The weights are a **shared rule**, and each user's word is **their own input** (teacher story: "multiply by 3", where every student brings a different number). The GPU stacks the 10 users into a table, multiplies it by the same weights, and gets one output row per user. The rows never mix.
+
+| Part | Shared? |
+|---|---|
+| Weights | ✅ read once, used by all |
+| Current word (input) | ❌ each user's own |
+| KV cache (chat memory) | ❌ each user's own, read separately |
+
+- Batching saves **reading time**, not **storage space**. The weights are still 16 GB, and the KV cache grows with every user.
+- One read = **1 word for each user**, not the whole answer.
+- Users join at any time, and the server mixes them in each step (**continuous batching**, vLLM).
+
+### Fix 2: Smaller weights 📦 (shorten the trip)
+
+BF16 is the **normal** size. FP8 and INT4 are smaller, at a small accuracy cost.
+
+| Weights | Size | Reading time (÷ 2,000 GB/s) |
+|---|---|---|
+| BF16 (normal) | 16 GB | 8 ms |
+| FP8 (half) | 8 GB | **4 ms** |
+| INT4 (quarter) | 4 GB | **2 ms** |
+
+👉 **Decode is slow because of reading. Batching = fewer reads per word. Smaller weights = faster reads. Use both.**
+
+**Check:** 1 user, INT4 weights. Words per second? → 4 ÷ 2,000 = 2 ms per word → **500 words/s**
