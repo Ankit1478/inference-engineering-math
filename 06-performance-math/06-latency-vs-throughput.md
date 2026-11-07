@@ -83,3 +83,42 @@ The GPU costs the same per hour either way, so **64 users = 64× cheaper per wor
 👉 **Per user: still 125 words/s. Total: users × 125.**
 
 **Check:** 100 users, 8 ms steps. Throughput? → 100 × 125 = **12,500 words/s**
+
+## Step 3: Why latency and throughput fight ⚔️
+
+**More users together = more total words (throughput ⬆️), but after a point each user waits longer (latency ⬆️).**
+
+**Story 🚌:** a bus with 500 seats. Up to 500 people, the trip still takes 8 min ✅. With 1,000 people, it's overloaded and takes 16 min, so everyone waits longer ⏳.
+
+### Ideal case (from 6.5: step time = bigger of reading 8 ms and maths users × 0.016 ms)
+
+| Users | Step time | Each user (1,000 ÷ step time) | **Throughput** |
+|---|---|---|---|
+| 1 | 8 ms | 125 words/s | 125 |
+| 64 | 8 ms | 125 words/s | 8,000 |
+| 500 | 8 ms | 125 words/s | **62,500** |
+| 1,000 | **16 ms** | **62** words/s 😕 | 62,500 (no gain) |
+| 2,000 | **32 ms** | **31** words/s 😞 | 62,500 (no gain) |
+
+- **Up to 500 users:** throughput goes up for free, and latency stays the same 🎉
+- **After 500:** throughput is stuck, and each user only gets slower ❌
+
+### Real life: it starts earlier ⚠️
+
+Each user's **KV cache** (6.5 Step 5) adds reading time, so the step time grows **before** 500. Example with 2,000-token chats (~0.26 GB of KV cache per user):
+
+| Users | Step time | Each user | Throughput |
+|---|---|---|---|
+| 1 | ~8 ms | ~123 words/s | ~123 |
+| 64 | ~16 ms | ~61 words/s | ~3,900 |
+| 256 | ~41 ms | ~24 words/s | ~6,200 |
+| 512 | ~75 ms | ~13 words/s | ~6,800 |
+
+| Person | Wants |
+|---|---|
+| 👤 User | **low latency** (fast replies) |
+| 💰 Company | **high throughput** (cheap per word) |
+
+👉 **The engineer's job: pick the batch size that gives the most throughput while keeping latency "good enough".**
+
+**Check:** ideal case, 1,500 users. Step time? Each user? → maths 24 ms > 8 ms, so **24 ms**, and 1,000 ÷ 24 ≈ **42 words/s**
