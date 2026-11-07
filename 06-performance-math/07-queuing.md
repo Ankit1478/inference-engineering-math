@@ -63,3 +63,21 @@ Going from 90% to 99% busy only adds 10% more work, but the wait gets **11× lon
 This waiting time **adds directly to TTFT**, so the user feels it before the first word.
 
 > This is a rough model. Real servers aren't exactly like this, but the shape (flat, then a sudden explosion near 100%) is the same.
+
+## Step 4: Little's Law ⭐
+
+```
+Users inside = arrival rate × time each one stays
+```
+
+At the chai stall: if 2 customers arrive every minute and each stays 5 minutes, there are about 10 people inside at any time.
+
+**On the GPU:** 30 requests per second × 1.6 s each = **48 users** in the batch at once.
+
+**Why it matters:** it tells you the **KV-cache memory** you need.
+
+- 1 user = 700 tokens (500 prompt + 200 answer) × 0.13 MB ≈ **0.09 GB**
+- 48 users × 0.09 GB ≈ **4.3 GB of KV cache**
+- An H100 has about 56 GB free for KV, so it fits easily ✅
+
+(Step 1 was Little's Law the other way round: 64 seats ÷ 1.6 s = 40 req/s.)
