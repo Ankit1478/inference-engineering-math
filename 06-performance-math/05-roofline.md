@@ -300,3 +300,32 @@ More users = **more** KV cache to read. The KV cache reads stay at ~1 FLOP per b
 👉 **First find the slow part (reading or maths), then fix that part.**
 
 **Check:** very long chats (32K tokens), and decode is slow even with batching. Why? → each user's KV cache (**4 GB**) is read for every word and isn't shared. Fix: FP8 KV cache or shorter context.
+
+## Remember
+
+| Step | Remember |
+|---|---|
+| 1 | **Intensity** = FLOPs per byte ≈ tokens sharing one read of the weights |
+| 2 | Reading = 16 GB ÷ 2,000 GB/s = **8 ms**. Maths = tokens × 0.016 ms. The **bigger wins**. Switch point = **500** |
+| 3 | **Prefill** = many tokens per read → maths-bound. **Decode** = 1 word per user per read → memory-bound |
+| 4 | Fix decode: **batching** (fewer reads) + **smaller weights** (faster reads) |
+| 5 | Fix prefill: **faster maths**. The **KV cache** is per user, so batching can't help it: shrink it instead |
+
+## Quick check
+
+1. Decode with 200 users, BF16 weights. Reading time? Maths time? Which is slow?
+2. A 4,000-token prompt. Which is slow, reading or maths?
+3. 10 users batched. How many times are the weights read for one step?
+4. Does batching reduce the memory space the weights take?
+5. Why does a long chat make decode slow, even with batching?
+
+<details>
+<summary>Answers</summary>
+
+1. Reading 8 ms, maths 200 × 0.016 = 3.2 ms → **reading** (memory)
+2. Reading 8 ms, maths 64 ms → **maths**
+3. **Once** (1 word for each of the 10 users)
+4. **No.** It saves **reading time**, not space.
+5. Each user's **KV cache** is read for every word and **isn't shared**.
+
+</details>
