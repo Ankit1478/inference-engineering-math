@@ -26,3 +26,18 @@ There are two numbers:
 ```
 Service rate = seats ÷ time each user stays = 64 ÷ 1.6 = 40 req/s
 ```
+
+## Step 2: How busy is the GPU? (utilization) 📊
+
+```
+Busy = arrival rate ÷ service rate
+```
+
+| Requests coming in | Busy | What happens |
+|---|---|---|
+| 20 per second | 50% | Relaxed, almost no line |
+| 36 per second | 90% | Works, but there's a line |
+| 40 per second | 100% | Just barely keeping up |
+| 50 per second | 125% 💥 | 10 extra requests pile up **every second**, so the line grows forever |
+
+**Rule:** busy must stay below 100%, or users wait forever.
