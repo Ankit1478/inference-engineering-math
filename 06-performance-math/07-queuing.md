@@ -41,3 +41,25 @@ Busy = arrival rate ÷ service rate
 | 50 per second | 125% 💥 | 10 extra requests pile up **every second**, so the line grows forever |
 
 **Rule:** busy must stay below 100%, or users wait forever.
+
+## Step 3: Why the wait explodes near 100% 📈
+
+Arrivals are random, not steady. Sometimes 5 people walk in at once. If the GPU has spare room, it catches up. If it's always busy, it never catches up.
+
+```
+Wait in line ≈ busy ÷ (1 − busy) × 25 ms
+```
+
+The 25 ms is how often the GPU frees up a seat: 1 ÷ 40 per second.
+
+| Busy | Wait in line |
+|---|---|
+| 50% | 1 × 25 = **25 ms** 😊 |
+| 80% | 4 × 25 = **100 ms** |
+| 90% | 9 × 25 = **225 ms** 😐 |
+| 99% | 99 × 25 = **~2.5 s** 😱 |
+
+Going from 90% to 99% busy only adds 10% more work, but the wait gets **11× longer**.
+This waiting time **adds directly to TTFT**, so the user feels it before the first word.
+
+> This is a rough model. Real servers aren't exactly like this, but the shape (flat, then a sudden explosion near 100%) is the same.
