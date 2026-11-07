@@ -6,6 +6,7 @@
 |---|---|
 | 1 | **Answers per read** (arithmetic intensity) |
 | 2 | **The speed limit**: fill the bus (500 seats) |
+| 3 | **Prefill vs decode**: where real jobs sit on the roof |
 
 ## Step 1: How many answers per read? 📖
 
@@ -162,3 +163,41 @@ Speed = the smaller of:  2 × intensity   (memory: 2,000 GB/s × intensity)
 👉 **Below 500: the slope, memory is the limit, so add users. Above 500: the flat roof, maths is the limit.**
 
 **Check:** 100 users. GPU busy? What's slow? → 100 ÷ 500 = **20%**, memory (the slope)
+
+## Step 3: Prefill vs decode (where real jobs sit) 🏠
+
+The only question: **how many tokens share one read of the weights?**
+
+| Job | What it is | Tokens per read |
+|---|---|---|
+| **Prefill** | reading the prompt: all its tokens go through **together** | = prompt length |
+| **Decode** | writing the reply: **1 word per user** per read | = number of users |
+
+- In decode, **every word reads all 16 GB again**. The weights are only **read, never updated**.
+- A 2,000-token prompt = **1 read**. A 2,000-word reply = **2,000 reads**.
+
+### FLOPs vs bytes
+
+**FLOP** = 1 maths step (1 multiply or 1 add). Each weight = **2 FLOPs per token**. **Bytes** = what the truck brings, **FLOPs** = what the chef cooks.
+
+| Job | Bytes read | FLOPs | Reading | Maths | Slow part | FLOPs per byte |
+|---|---|---|---|---|---|---|
+| Decode, 1 user | 16 GB | 16 GFLOPs | **8 ms** | 0.016 ms | memory 🚚 | **1** (0.2% busy) |
+| Decode, 64 users | 16 GB | 1 TFLOPs | **8 ms** | 1 ms | memory 🚚 | 64 (13% busy) |
+| Prefill, 100 tokens | 16 GB | 1.6 TFLOPs | **8 ms** | 1.6 ms | memory 🚚 | 100 (20% busy) |
+| Prefill, 2,000 tokens | 16 GB | 32 TFLOPs | 8 ms | **32 ms** | maths 👨‍🍳 | **2,000** (100% busy) |
+
+The H100 can do **500 FLOPs per byte**. Below 500, memory is the limit. Above 500, maths is the limit.
+
+### How the model makes a word
+
+```
+word → token ID → 4,096 numbers → × weights through 32 layers
+     → a score for every word (128K) → softmax → chances → pick one
+```
+
+It gives **chances**, not one exact answer. That's why the same question can get different replies.
+
+👉 **Prefill = few reads, lots of maths (maths-bound, GPU busy). Decode = one read per word, little maths (memory-bound, GPU waits).** A short prompt (under ~500 tokens) still behaves like decode.
+
+**Check:** decode with 300 users. Memory or maths? → 300 < 500, so **memory** (reading 8 ms vs maths 4.8 ms)
