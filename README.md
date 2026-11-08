@@ -8,6 +8,8 @@ Each lesson has the same parts: why it matters for inference, a real-life exampl
 
 **Progress: 37 done, 0 left, 37 total** 🎉
 
+📋 **[Cheatsheet: all formulas worked on my Mac](CHEATSHEET.md)**
+
 ## Section 1: Linear Algebra ✅ (9/9)
 
 - ✅ [Vectors and dot product](01-linear-algebra/01-vectors-and-dot-product.md) ⭐
